@@ -1,3 +1,4 @@
+#!/bin/sh
 set -e
 
 # Se DATABASE_HOST estiver definido, espera conexão antes de iniciar
