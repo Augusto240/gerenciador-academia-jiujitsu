@@ -15,10 +15,11 @@ Como programador, vi uma oportunidade de criar uma solução melhor e mais robus
 
 ## Funcionalidades Principais
 
-* ✅ **Listagem de Alunos:** Visualização de todos os alunos cadastrados em uma tabela.
+* ✅ **Listagem de Alunos:** Visualização de todos os alunos cadastrados com cálculo automático de idade.
 * ✅ **Cadastro de Alunos:** Formulário para adicionar novos alunos ao banco de dados.
 * ✅ **Edição de Alunos:** Atualização das informações de um aluno existente.
 * ✅ **Remoção de Alunos:** Exclusão de um aluno do sistema.
+* ✅ **Interface Aprimorada:** Formulários com menus de seleção para padronização de dados (faixas e turmas) e mensagens de feedback visual para o usuário após cada ação.
 * ✅ **Banco de Dados Automatizado:** A base de dados e a tabela são criadas e populadas com dados de exemplo automaticamente na inicialização.
 
 ## Tecnologias Utilizadas
@@ -41,7 +42,7 @@ Graças ao Docker, iniciar todo o ambiente (aplicação + banco de dados) requer
 
 1.  **Clone o repositório para sua máquina local:**
     ```bash
-    git clone https://github.com/Augusto240/gerenciador-academia-jiujitsu
+    git clone [https://github.com/Augusto240/gerenciador-academia-jiujitsu.git](https://github.com/Augusto240/gerenciador-academia-jiujitsu.git)
     ```
 
 2.  **Acesse a pasta do projeto:**
@@ -74,12 +75,13 @@ Para parar todo o ambiente, basta voltar ao terminal e pressionar `Ctrl` + `C`.
 |-- README.md               # Este arquivo de documentação.
 ```
 
-## Roadmap de Melhorias (ainda estou pensando direitinho nisso)
+## Roadmap de Melhorias
 
 * **Melhorias de UI/UX:**
-    * [ ] Utilizar menus de seleção (`<select>`) para campos como "Cor da Faixa" e "Turma".
-    * [ ] Adicionar mensagens de feedback para o usuário (ex: "Aluno cadastrado com sucesso!").
-    * [ ] Implementar paginação na lista de alunos.
+    * [x] Utilizar menus de seleção (`<select>`) para campos como "Cor da Faixa" e "Turma".
+    * [x] Adicionar mensagens de feedback para o usuário (ex: "Aluno cadastrado com sucesso!").
+    * [x] Calcular e exibir a idade do aluno dinamicamente.
+    * [ ] Implementar paginação na lista de alunos caso a lista fique muito grande.
 * **Novas Funcionalidades:**
     * [ ] Implementar um sistema de **Controle de Presença**.
     * [ ] Criar um **Histórico de Graduação** para cada aluno.
