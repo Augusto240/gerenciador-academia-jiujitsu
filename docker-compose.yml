@@ -1,0 +1,30 @@
+services:
+  app:
+    build: .
+    ports:
+      - "4567:4567"
+    volumes:
+      - .:/usr/src/app
+    environment:
+      DATABASE_HOST: db
+      DATABASE_USER: jiujitsu_user
+      DATABASE_PASSWORD: senha_forte_123
+      DATABASE_NAME: academia_jiujitsu
+    depends_on:
+      - db
+
+  db:
+    image: mariadb:10.11
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: sua_senha_root_aqui
+      MARIADB_DATABASE: academia_jiujitsu
+      MARIADB_USER: jiujitsu_user
+      MARIADB_PASSWORD: senha_forte_123
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+
+volumes:
+  mariadb_data: {}

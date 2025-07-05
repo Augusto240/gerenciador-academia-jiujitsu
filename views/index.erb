@@ -1,0 +1,48 @@
+<header>
+    <img src="/logo.png" alt="Logo da Academia" class="logo">
+    <h1>Controle de Alunos</h1>
+</header>
+
+<section class="form-section">
+    <h2>Cadastrar Novo Aluno</h2>
+    <form action="/alunos" method="POST">
+        <input type="text" name="nome" placeholder="Nome completo" required>
+        <input type="text" name="cor_faixa" placeholder="Cor da faixa">
+        <label for="data_nascimento">Data de Nascimento:</label>
+        <input type="date" name="data_nascimento" required>
+        <input type="text" name="turma" placeholder="Turma (Ex: Adulto Iniciante)">
+        <button type="submit">Cadastrar</button>
+    </form>
+</section>
+
+<section class="list-section">
+    <h2>Alunos Cadastrados</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Data de Nascimento</th>
+                <th>Faixa</th>
+                <th>Turma</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% @alunos.each do |aluno| %>
+            <tr>
+                <td><%= aluno['nome'] %></td>
+                <td><%= aluno['data_formatada'] %></td>
+                <td><%= aluno['cor_faixa'] %></td>
+                <td><%= aluno['turma'] %></td>
+                <td class="actions">
+                    <a href="/alunos/<%= aluno['id'] %>/editar" class="btn-editar">Editar</a>
+                    <form action="/alunos/<%= aluno['id'] %>" method="POST" style="display:inline;">
+                      <input type="hidden" name="_method" value="DELETE">
+                      <button type="submit" class="btn-remover" onclick="return confirm('Tem certeza que deseja remover este aluno?');">Remover</button>
+                    </form>
+                </td>
+            </tr>
+            <% end %>
+        </tbody>
+    </table>
+</section>
