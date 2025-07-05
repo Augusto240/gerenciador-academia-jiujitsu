@@ -10,6 +10,13 @@
 
 <body>
     <div class="container">
+        
+        <% if session[:mensagem_sucesso] %>
+            <div class="alert-sucesso">
+                <%= session.delete(:mensagem_sucesso) %>
+            </div>
+        <% end %>
+
         <%= yield %>
     </div>
 </body>

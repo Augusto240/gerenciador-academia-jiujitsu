@@ -7,10 +7,22 @@
     <h2>Cadastrar Novo Aluno</h2>
     <form action="/alunos" method="POST">
         <input type="text" name="nome" placeholder="Nome completo" required>
-        <input type="text" name="cor_faixa" placeholder="Cor da faixa">
-        <label for="data_nascimento">Data de Nascimento:</label>
-        <input type="date" name="data_nascimento" required>
-        <input type="text" name="turma" placeholder="Turma (Ex: Adultos)">
+        <label for="cor_faixa">Faixa:</label>
+<select name="cor_faixa" id="cor_faixa">
+  <% @faixas.each do |faixa| %>
+    <option value="<%= faixa %>"><%= faixa %></option>
+  <% end %>
+</select>
+
+<label for="data_nascimento">Data de Nascimento:</label>
+<input type="date" name="data_nascimento">
+
+<label for="turma">Turma:</label>
+<select name="turma" id="turma">
+  <% @turmas.each do |turma| %>
+    <option value="<%= turma %>"><%= turma %></option>
+  <% end %>
+</select>
         <button type="submit">Cadastrar</button>
     </form>
 </section>
@@ -18,22 +30,20 @@
 <section class="list-section">
     <h2>Alunos Cadastrados</h2>
     <table>
-        <thead>
-            <tr>
-                <th>Nome</th>
-                <th>Data de Nascimento</th>
-                <th>Faixa</th>
-                <th>Turma</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
+            <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Idade</th> <th>Faixa</th>
+            <th>Turma</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
         <tbody>
-            <% @alunos.each do |aluno| %>
-            <tr>
-                <td><%= aluno['nome'] %></td>
-                <td><%= aluno['data_formatada'] %></td>
-                <td><%= aluno['cor_faixa'] %></td>
-                <td><%= aluno['turma'] %></td>
+    <% @alunos.each do |aluno| %>
+    <tr>
+        <td><%= aluno['nome'] %></td>
+        <td><%= aluno['idade'] %></td> <td><%= aluno['cor_faixa'] %></td>
+        <td><%= aluno['turma'] %></td>
                 <td class="actions">
                     <a href="/alunos/<%= aluno['id'] %>/editar" class="btn-editar">Editar</a>
                     <form action="/alunos/<%= aluno['id'] %>" method="POST" style="display:inline;">

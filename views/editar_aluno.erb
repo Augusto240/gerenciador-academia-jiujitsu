@@ -9,14 +9,22 @@
       <label for="nome">Nome Completo:</label>
       <input type="text" id="nome" name="nome" value="<%= @aluno['nome'] %>" required>
       
-      <label for="cor_faixa">Cor da Faixa:</label>
-      <input type="text" id="cor_faixa" name="cor_faixa" value="<%= @aluno['cor_faixa'] %>">
-      
-      <label for="data_nascimento">Data de Nascimento:</label>
-      <input type="date" id="data_nascimento" name="data_nascimento" value="<%= @aluno['data_nascimento'].strftime('%Y-%m-%d') %>" required>
-      
-      <label for="turma">Turma:</label>
-      <input type="text" id="turma" name="turma" value="<%= @aluno['turma'] %>">
+      <label for="cor_faixa">Faixa:</label>
+<select name="cor_faixa" id="cor_faixa">
+  <% @faixas.each do |faixa| %>
+    <option value="<%= faixa %>" <%= 'selected' if @aluno['cor_faixa'] == faixa %>><%= faixa %></option>
+  <% end %>
+</select>
+
+<label for="data_nascimento">Data de Nascimento:</label>
+<input type="date" id="data_nascimento" name="data_nascimento" value="<%= @aluno['data_nascimento'].strftime('%Y-%m-%d') %>">
+
+<label for="turma">Turma:</label>
+<select name="turma" id="turma">
+  <% @turmas.each do |turma| %>
+    <option value="<%= turma %>" <%= 'selected' if @aluno['turma'] == turma %>><%= turma %></option>
+  <% end %>
+</select>
       
       <button type="submit">Salvar Alterações</button>
       <a href="/" class="btn-cancelar">Cancelar</a>
