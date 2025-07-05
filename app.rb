@@ -9,7 +9,7 @@ enable :sessions
 FAIXAS = ['Branca', 'Cinza/Branca', 'Cinza', 'Cinza/Preta', 'Amarela/Branca', 'Amarela',
           'Amarela/Preta', 'Laranja/Branca', 'Laranja', 'Laranja/Preta', 'Verde/Branca', 'Verde', 'Verde/Preta',
           'Azul', 'Roxa', 'Marrom', 'Preta', 'Vermelha/Preta', 'Vermelha/Branca', 'Vermelha']
-TURMAS = ['Kids 2 a 3 anos', 'Kids', 'Adolescentes/Juvenil', 'Adultos', 'Feminino']
+TURMAS = ['Kids 2 a 3 anos', 'Kids', 'Adolescentes/Juvenil', 'Adultos', 'Feminino', 'Master/Sênior']
 
 # --- CONEXÃO COM O BANCO ---
 def create_db_client
