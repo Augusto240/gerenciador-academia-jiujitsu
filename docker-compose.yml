@@ -16,6 +16,8 @@ services:
   db:
     image: mariadb:10.11
     restart: always
+    ports: 
+    - "3307:3306"
     environment:
       MARIADB_ROOT_PASSWORD: sua_senha_root_aqui
       MARIADB_DATABASE: academia_jiujitsu
