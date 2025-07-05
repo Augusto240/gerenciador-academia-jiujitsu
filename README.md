@@ -41,12 +41,12 @@ Graças ao Docker, iniciar todo o ambiente (aplicação + banco de dados) requer
 
 1.  **Clone o repositório para sua máquina local:**
     ```bash
-    git clone [https://github.com/SEU_USUARIO/NOME_DO_REPOSITORIO.git](https://github.com/SEU_USUARIO/NOME_DO_REPOSITORIO.git)
+    git clone [https://github.com/Augusto240/gerenciador-academia-jiujitsu]
     ```
 
 2.  **Acesse a pasta do projeto:**
     ```bash
-    cd NOME_DO_REPOSITORIO
+    cd gerenciador-academia-jiujitsu
     ```
 
 3.  **Construa e inicie os contêineres:**
