@@ -3,15 +3,12 @@ require 'mysql2'
 
 use Rack::MethodOverride
 enable :sessions
-# --- CONSTANTES DE OPÇÕES ---
-# Definir as listas aqui evita repetição e organiza o código.
-# A vírgula que faltava depois de 'Cinza' foi corrigida.
+
 FAIXAS = ['Branca', 'Cinza/Branca', 'Cinza', 'Cinza/Preta', 'Amarela/Branca', 'Amarela',
           'Amarela/Preta', 'Laranja/Branca', 'Laranja', 'Laranja/Preta', 'Verde/Branca', 'Verde', 'Verde/Preta',
           'Azul', 'Roxa', 'Marrom', 'Preta', 'Vermelha/Preta', 'Vermelha/Branca', 'Vermelha']
 TURMAS = ['Kids 2 a 3 anos', 'Kids', 'Adolescentes/Juvenil', 'Adultos', 'Feminino', 'Master/Sênior']
 
-# --- CONEXÃO COM O BANCO ---
 def create_db_client
   Mysql2::Client.new(
     host:     ENV['DATABASE_HOST'],
@@ -21,33 +18,26 @@ def create_db_client
   )
 end
 
-# --- ROTAS DA APLICAÇÃO ---
-
 get '/' do
   client = create_db_client
-  
-  # 1. Buscamos a data de nascimento original (sem o DATE_FORMAT)
+
   alunos_do_banco = client.query("SELECT id, nome, data_nascimento, cor_faixa, turma FROM alunos ORDER BY nome ASC")
-  
-  # 2. Processamos os dados no Ruby para calcular a idade
+
   @alunos = alunos_do_banco.map do |aluno|
     hoje = Date.today
     data_nasc = aluno['data_nascimento']
-    
-    # Lógica para calcular a idade
+
     if data_nasc
       idade = hoje.year - data_nasc.year
-      # Subtrai 1 se o aniversário ainda não passou este ano
       idade -= 1 if hoje.yday < data_nasc.yday
       aluno['idade'] = idade
     else
-      aluno['idade'] = 'N/A' # Caso a data de nascimento seja nula
+      aluno['idade'] = 'N/A' 
     end
 
-    aluno # Retorna o hash do aluno modificado
+    aluno
   end
   
-  # Disponibiliza as constantes para a view
   @faixas = FAIXAS
   @turmas = TURMAS
 
@@ -72,7 +62,6 @@ get '/alunos/:id/editar' do
   id = params['id']
   @aluno = client.query("SELECT * FROM alunos WHERE id = #{id}").first
 
-  # Disponibiliza as constantes para a view
   @faixas = FAIXAS
   @turmas = TURMAS
 
