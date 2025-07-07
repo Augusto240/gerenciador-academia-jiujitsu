@@ -3,6 +3,15 @@
     <h1>Controle de Alunos</h1>
 </header>
 
+<section class="search-section">
+    <h2>Buscar Aluno</h2>
+    <form action="/" method="GET">
+        <input type="text" name="busca" placeholder="Digite o nome do aluno..." value="<%= params[:busca] %>">
+        <button type="submit">Buscar</button>
+        <a href="/" class="btn-limpar">Limpar Busca</a>
+    </form>
+</section>
+
 <section class="form-section">
     <h2>Cadastrar Novo Aluno</h2>
     <form action="/alunos" method="POST">
@@ -41,7 +50,7 @@
         <tbody>
     <% @alunos.each do |aluno| %>
     <tr>
-        <td><%= aluno['nome'] %></td>
+        <td><a href="/alunos/<%= aluno['id'] %>"><%= aluno['nome'] %></a></td>
         <td><%= aluno['idade'] %></td> <td><%= aluno['cor_faixa'] %></td>
         <td><%= aluno['turma'] %></td>
                 <td class="actions">

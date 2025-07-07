@@ -151,3 +151,92 @@ form select {
     border-color: #c3e6cb;
     text-align: center;
 }
+
+
+footer {
+  text-align: center;
+  padding: 20px;
+  margin-top: 40px;
+  border-top: 1px solid #ddd;
+  color: #777;
+  font-size: 0.9em;
+}
+
+footer a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+/* Estilos para a Página de Detalhes do Aluno */
+.aluno-detalhes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.card h2 {
+  margin-top: 0;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.card h3.form-title {
+  margin-top: 25px;
+  font-size: 1.1em;
+  color: #333;
+}
+
+.btn-voltar {
+  display: inline-block;
+  margin-top: 15px;
+  padding: 10px 15px;
+  background-color: #6c757d;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+}
+
+/* Estilos para o status da mensalidade */
+.status-mensalidade {
+  padding: 5px 12px;
+  border-radius: 15px;
+  color: white;
+  font-weight: bold;
+  font-size: 0.9em;
+  display: inline-block;
+}
+
+.status-em-dia    { background-color: #28a745; }
+.status-atrasado  { background-color: #dc3545; }
+.status-pendente  { background-color: #ffc107; color: #333; }
+.status-inativo   { background-color: #6c757d; }
+
+/* Estilos para o rodapé */
+footer {
+  text-align: center;
+  padding: 20px;
+  margin-top: 40px;
+  border-top: 1px solid #ddd;
+  color: #777;
+  font-size: 0.9em;
+}
+footer a {
+  color: #0056b3;
+  text-decoration: none;
+}
+footer a:hover {
+  text-decoration: underline;
+}
