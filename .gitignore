@@ -4,3 +4,6 @@ data.sql
 docker/backups/backup_academia.sql
 
 !docker/backups/.gitkeep
+
+docker/backups 
+/docker/backups*
