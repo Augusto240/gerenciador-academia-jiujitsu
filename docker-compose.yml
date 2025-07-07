@@ -16,8 +16,8 @@ services:
   db:
     image: mariadb:10.11
     restart: always
-    ports: 
-    - "3307:3306"
+    ports:
+      - "3307:3306"
     environment:
       MARIADB_ROOT_PASSWORD: sua_senha_root_aqui
       MARIADB_DATABASE: academia_jiujitsu
@@ -26,7 +26,9 @@ services:
     volumes:
       - mariadb_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-
+      - ./docker/backups:/docker-entrypoint-initdb.d/backups:ro
+      - ./schema.sql:/docker-entrypoint-initdb.d/10_schema.sql:ro
+      - ./data.sql:/docker-entrypoint-initdb.d/20_data.sql:ro
 
 volumes:
   mariadb_data: {}
