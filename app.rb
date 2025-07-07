@@ -1,6 +1,6 @@
 require 'sinatra'
 require 'mysql2'
-require 'date' # Essencial para os cálculos de data
+require 'date' 
 
 use Rack::MethodOverride
 enable :sessions
