@@ -1,1 +1,6 @@
 data.sql
+
+# Ignora todo o conteúdo da pasta de backups...
+docker/backups/*
+
+!docker/backups/.gitkeep
