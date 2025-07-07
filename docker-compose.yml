@@ -25,9 +25,9 @@ services:
       MARIADB_PASSWORD: senha_forte_123
     volumes:
       - mariadb_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-      - ./docker/backups:/docker-entrypoint-initdb.d/backups:ro
+      # Carrega primeiro o schema para criar as tabelas
       - ./schema.sql:/docker-entrypoint-initdb.d/10_schema.sql:ro
+      # Carrega em seguida os dados para popular as tabelas
       - ./data.sql:/docker-entrypoint-initdb.d/20_data.sql:ro
 
 volumes:
