@@ -7,3 +7,4 @@ docker/backups/backup_academia.sql
 
 docker/backups 
 /docker/backups*
+docker/backups/*.sql

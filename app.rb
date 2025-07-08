@@ -5,13 +5,11 @@ require 'date'
 use Rack::MethodOverride
 enable :sessions
 
-# --- CONSTANTES DE OPÇÕES ---
 FAIXAS = ['Branca', 'Cinza/Branca', 'Cinza', 'Cinza/Preta', 'Amarela/Branca', 'Amarela',
           'Amarela/Preta', 'Laranja/Branca', 'Laranja', 'Laranja/Preta', 'Verde/Branca', 'Verde', 'Verde/Preta',
           'Azul', 'Roxa', 'Marrom', 'Preta', 'Vermelha/Preta', 'Vermelha/Branca', 'Vermelha']
 TURMAS = ['Kids 2 a 3 anos', 'Kids', 'Adolescentes/Juvenil', 'Adultos', 'Feminino', 'Master/Sênior']
 
-# --- CONEXÃO COM O BANCO ---
 def create_db_client
   Mysql2::Client.new(
     host:     ENV['DATABASE_HOST'],
@@ -21,7 +19,6 @@ def create_db_client
   )
 end
 
-# --- ROTA PRINCIPAL (COM BUSCA) ---
 get '/' do
   client = create_db_client
   
@@ -55,7 +52,6 @@ get '/' do
   erb :index
 end
 
-# --- PÁGINA DE DETALHES DO ALUNO ---
 get '/alunos/:id' do
   client = create_db_client
   id = params['id']
@@ -63,10 +59,8 @@ get '/alunos/:id' do
   @aluno = client.query("SELECT * FROM alunos WHERE id = #{id}").first
   redirect '/' if @aluno.nil?
 
-  # Busca a assinatura ativa
   @assinatura = client.query("SELECT * FROM assinaturas WHERE aluno_id = #{id} AND status = 'ativa'").first
   if @assinatura
-    # Busca o último pagamento
     ultimo_pagamento = client.query("SELECT data_pagamento FROM pagamentos WHERE assinatura_id = #{@assinatura['id']} ORDER BY data_pagamento DESC LIMIT 1").first
     
     if ultimo_pagamento
@@ -94,8 +88,6 @@ get '/alunos/:id' do
   erb :'alunos/show'
 end
 
-# --- ROTAS DE AÇÕES ---
-
 post '/alunos' do
   client = create_db_client
   nome = client.escape(params['nome'])
@@ -103,14 +95,11 @@ post '/alunos' do
   cor_faixa = client.escape(params['cor_faixa'])
   turma = client.escape(params['turma'])
 
-  # 1. Insere o novo aluno
   query_aluno = "INSERT INTO alunos(nome, data_nascimento, cor_faixa, turma) VALUES ('#{nome}', '#{data_nascimento}', '#{cor_faixa}', '#{turma}')"
   client.query(query_aluno)
   
-  # 2. Pega o ID do aluno que acabamos de criar
   aluno_id = client.last_id
 
-  # 3. Cria automaticamente uma assinatura para o novo aluno no plano padrão (id=1, valor=70.00)
   query_assinatura = "INSERT INTO assinaturas(aluno_id, plano_id, valor_mensalidade, status) VALUES (#{aluno_id}, 1, 70.00, 'ativa')"
   client.query(query_assinatura)
 
@@ -138,7 +127,7 @@ put '/alunos/:id' do
   query = "UPDATE alunos SET nome = '#{nome}', data_nascimento = '#{data_nascimento}', cor_faixa = '#{cor_faixa}', turma = '#{turma}' WHERE id = #{id}"
   client.query(query)
   session[:mensagem_sucesso] = "Dados do aluno atualizados com sucesso!"
-  redirect "/alunos/#{id}" # Redireciona de volta para a página de detalhes
+  redirect "/alunos/#{id}"
 end
 
 delete '/alunos/:id' do
@@ -169,11 +158,9 @@ post '/graduacoes' do
   faixa = client.escape(params['faixa'])
   data_graduacao = client.escape(params['data_graduacao'])
 
-  # Insere no histórico
   insert_query = "INSERT INTO graduacoes(aluno_id, faixa, data_graduacao) VALUES (#{aluno_id}, '#{faixa}', '#{data_graduacao}')"
   client.query(insert_query)
 
-  # Atualiza a faixa atual do aluno na tabela principal
   update_query = "UPDATE alunos SET cor_faixa = '#{faixa}' WHERE id = #{aluno_id}"
   client.query(update_query)
   
