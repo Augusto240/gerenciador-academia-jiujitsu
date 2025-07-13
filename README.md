@@ -5,22 +5,23 @@
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)
 
-Um aplicativo web simples para gerenciar o cadastro de alunos de uma academia de jiu-jitsu. O projeto é totalmente containerizado com Docker para garantir um ambiente de desenvolvimento robusto, portátil e fácil de executar.
+Uma aplicação web completa para gestão de academias de jiu-jitsu, desenvolvida para ser uma ferramenta robusta e fácil de usar. O projeto é totalmente containerizado com Docker para garantir um ambiente de desenvolvimento e implantação consistente e portátil.
 
 ## Sobre o Projeto
 
-Este projeto nasceu de uma necessidade real. Meu professor de jiu jitsu queria ter um controle melhor sobre os alunos da academia, registrando informações como nome, data de nascimento, cor da faixa e a turma em que o aluno luta. A solução inicial foi uma simples planilha no Google Sheets, preenchida manualmente.
+Este projeto nasceu de uma necessidade real: substituir a planilha manual do meu professor por uma solução digital, centralizada e eficiente. O que começou como um simples CRUD (Cadastro, Leitura, Edição e Deleção) de alunos, evoluiu para um sistema de gestão multifacetado, capaz de controlar aspectos financeiros, de progressão e de frequência dos alunos, tudo isso rodando em uma arquitetura moderna com Docker.
 
-Como programador, vi uma oportunidade de criar uma solução melhor e mais robusta. A ideia evoluiu para um site simples de cadastro, edição e remoção de alunos, utilizando um banco de dados para garantir a integridade e escalabilidade dos dados. O projeto evoluiu para uma arquitetura moderna utilizando Docker e Docker Compose, garantindo um ambiente de desenvolvimento consistente e portátil.
+## Funcionalidades Implementadas
 
-## Funcionalidades Principais
-
-* ✅ **Listagem de Alunos:** Visualização de todos os alunos cadastrados com cálculo automático de idade.
-* ✅ **Cadastro de Alunos:** Formulário para adicionar novos alunos ao banco de dados.
-* ✅ **Edição de Alunos:** Atualização das informações de um aluno existente.
-* ✅ **Remoção de Alunos:** Exclusão de um aluno do sistema.
-* ✅ **Interface Aprimorada:** Formulários com menus de seleção para padronização de dados (faixas e turmas) e mensagens de feedback visual para o usuário após cada ação.
-* ✅ **Banco de Dados Automatizado:** A base de dados e a tabela são criadas e populadas com dados de exemplo automaticamente na inicialização.
+* ✅ **Gestão Completa de Alunos:** CRUD completo com busca e filtros avançados (por nome, faixa e turma).
+* ✅ **Página de Detalhes do Aluno:** Uma visão 360º de cada aluno, consolidando dados cadastrais, status financeiro, histórico de graduações e frequência.
+* ✅ **Controle de Mensalidades:** Sistema para registrar pagamentos, com cálculo automático de status ("Em Dia", "Atrasado", "Pendente").
+* ✅ **Histórico de Graduação:** Registro de todas as trocas de faixa de um aluno, atualizando seu status atual no sistema.
+* ✅ **Controle de Aulas e Presença:** Cadastro de aulas por turma e uma interface de lista de chamada para marcar a presença dos alunos.
+* ✅ **Anamnese:** Seção dedicada no cadastro e perfil do aluno para registrar informações importantes de saúde.
+* ✅ **Interface Moderna e Profissional:** UI completamente redesenhada com uma paleta de cores sóbria, tipografia clara e componentes consistentes.
+* ✅ **Ambiente Containerizado:** 100% configurado com Docker e Docker Compose para portabilidade e facilidade de execução.
+* ✅ **Segurança de Dados:** Separação da estrutura (`schema.sql`) e dos dados (`data.sql`), com os dados sensíveis dos alunos sendo ignorados pelo Git para garantir a privacidade.
 
 ## Tecnologias Utilizadas
 
@@ -31,12 +32,12 @@ Como programador, vi uma oportunidade de criar uma solução melhor e mais robus
 
 ## Como Rodar o Projeto
 
-Graças ao Docker, iniciar todo o ambiente (aplicação + banco de dados) requer apenas um comando.
+Graças ao Docker, iniciar todo o ambiente (aplicação + banco de dados) requer poucos passos.
 
 ### Pré-requisitos
 
 * [Git](https://git-scm.com/downloads)
-* [Docker Desktop](https://www.docker.com/products/docker-desktop/) com a integração do WSL 2 ativada e em execução.
+* [Docker](https://www.docker.com/products/docker-desktop/) (Docker Desktop no Windows/Mac ou Docker Engine no Linux)
 
 ### Instalação e Execução
 
@@ -49,14 +50,18 @@ Graças ao Docker, iniciar todo o ambiente (aplicação + banco de dados) requer
     ```bash
     cd gerenciador-academia-jiujitsu
     ```
+3.  **(Apenas na primeira vez em uma máquina nova)** Crie um arquivo de dados vazio para o Docker. Como os dados dos alunos são privados e não vão para o GitHub, este passo é necessário para que o ambiente inicie corretamente.
+    ```bash
+    touch initdb/20_data.sql
+    ```
 
-3.  **Construa e inicie os contêineres:**
+4.  **Construa e inicie os contêineres:**
     ```bash
     docker compose up --build
     ```
-    Este único comando irá baixar as imagens necessárias, construir o ambiente do aplicativo, iniciar o banco de dados e conectar tudo.
+    Este único comando irá baixar as imagens necessárias, construir o ambiente do aplicativo, iniciar o banco de dados com a estrutura correta e conectar tudo.
 
-4.  **Acesse a aplicação:**
+5.  **Acesse a aplicação:**
     Abra seu navegador e vá para o endereço: **[http://localhost:4567](http://localhost:4567)**
 
 Para parar todo o ambiente, basta voltar ao terminal e pressionar `Ctrl` + `C`.
@@ -67,9 +72,11 @@ Para parar todo o ambiente, basta voltar ao terminal e pressionar `Ctrl` + `C`.
 /
 |-- app.rb                  # O coração da aplicação Sinatra, com todas as rotas e lógica.
 |-- Dockerfile              # A "receita" para construir a imagem Docker do aplicativo Ruby.
-|-- docker-compose.yml      # O "maestro" que orquestra os contêineres do app e do banco de dados.
-|-- init.sql                # Script que cria a tabela `alunos` e insere dados iniciais no banco.
-|-- Gemfile / Gemfile.lock  # Define e trava as dependências (gems) do projeto.
+|-- docker-compose.yml      # O "maestro" que orquestra os contêineres do app e do banco.
+|-- /initdb/                # Pasta com os scripts de inicialização do banco de dados.
+|   |-- 10_schema.sql       # Cria a estrutura de todas as tabelas. (Público)
+|   |-- 20_data.sql         # Insere os dados dos alunos. (Privado, ignorado pelo Git)
+|-- Gemfile / Gemfile.lock  # Define as dependências (gems) do projeto.
 |-- /public/                # Pasta para arquivos estáticos (CSS, imagens).
 |-- /views/                 # Pasta para os templates de HTML com Ruby embutido (ERB).
 |-- README.md               # Este arquivo de documentação.
@@ -77,18 +84,11 @@ Para parar todo o ambiente, basta voltar ao terminal e pressionar `Ctrl` + `C`.
 
 ## Roadmap de Melhorias
 
-* **Melhorias de UI/UX:**
-    * [x] Utilizar menus de seleção (`<select>`) para campos como "Cor da Faixa" e "Turma".
-    * [x] Adicionar mensagens de feedback para o usuário (ex: "Aluno cadastrado com sucesso!").
-    * [x] Calcular e exibir a idade do aluno dinamicamente.
-    * [ ] Implementar paginação na lista de alunos caso a lista fique muito grande.
-* **Novas Funcionalidades:**
-    * [ ] Implementar um sistema de **Controle de Presença**.
-    * [ ] Criar um **Histórico de Graduação** para cada aluno.
-    * [ ] Adicionar um **Controle de Mensalidades**.
 * **Melhorias Técnicas:**
     * [ ] Adicionar um **Sistema de Login (Autenticação)** para proteger o acesso.
     * [ ] Escrever testes automatizados para a aplicação.
+    * [ ] Implementar paginação na lista de alunos para melhor performance com muitos registros.
+    * [ ] Refatorar o código para uma arquitetura mais orientada a objetos (ex: Models).
 
 ---
 

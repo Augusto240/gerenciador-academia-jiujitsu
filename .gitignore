@@ -1,0 +1,11 @@
+data.sql
+
+# Ignora todo o conteúdo da pasta de backups...
+docker/backups/backup_academia.sql
+
+!docker/backups/.gitkeep
+
+docker/backups 
+/docker/backups*
+docker/backups/*.sqldocker/backups/*.sql
+backup_notebook.sql

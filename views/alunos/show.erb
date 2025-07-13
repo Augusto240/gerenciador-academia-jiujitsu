@@ -1,0 +1,86 @@
+<header>
+  <h1>Detalhes de: <%= @aluno['nome'] %></h1>
+  <a href="/" class="btn-voltar">Voltar para a Lista</a>
+</header>
+
+<div class="aluno-detalhes-grid">
+  <section class="card">
+    <h2>Dados Cadastrais</h2>
+    <p><strong>Nome:</strong> <%= @aluno['nome'] %></p>
+    <p><strong>Status:</strong> <%= @aluno['bolsista'] == 1 ? 'Bolsista' : 'Pagante' %></p>
+    <p><strong>Data de Nascimento:</strong> <%= @aluno['data_nascimento'] ? @aluno['data_nascimento'].strftime('%d/%m/%Y') : 'N/A' %></p>
+    <p><strong>Faixa Atual:</strong> <%= @aluno['cor_faixa'] %></p>
+    <p><strong>Turma:</strong> <%= @aluno['turma'] %></p>
+    <br>
+    <a href="/alunos/<%= @aluno['id'] %>/editar" class="btn-editar">Editar Dados</a>
+  </section>
+  
+  <section class="card">
+    <h2>Anamnese</h2>
+    <p><strong>Problema de saúde:</strong> <%= @aluno['saude_problema'] && !@aluno['saude_problema'].empty? ? @aluno['saude_problema'] : 'Não informado' %></p>
+    <p><strong>Uso de medicação:</strong> <%= @aluno['saude_medicacao'] && !@aluno['saude_medicacao'].empty? ? @aluno['saude_medicacao'] : 'Não informado' %></p>
+    <p><strong>Histórico de lesões:</strong> <%= @aluno['saude_lesao'] && !@aluno['saude_lesao'].empty? ? @aluno['saude_lesao'] : 'Não informado' %></p>
+    <p><strong>Uso de substâncias:</strong> <%= @aluno['saude_substancia'] && !@aluno['saude_substancia'].empty? ? @aluno['saude_substancia'] : 'Não informado' %></p>
+  </section>
+
+  <section class="card">
+    <h2>Mensalidades</h2>
+    <% if @assinatura %>
+      <p><strong>Status:</strong> <span class="status-mensalidade <%= @cor_status %>"><%= @status_mensalidade %></span></p>
+      <h3 class="form-title">Registrar Novo Pagamento</h3>
+      <form action="/pagamentos" method="POST">
+        <input type="hidden" name="assinatura_id" value="<%= @assinatura['id'] %>">
+        <input type="hidden" name="aluno_id" value="<%= @aluno['id'] %>">
+        <label for="valor_pago">Valor Pago (R$):</label>
+        <input type="number" step="0.01" name="valor_pago" value="<%= @assinatura['valor_mensalidade'] %>" required>
+        <label for="data_pagamento">Data do Pagamento:</label>
+        <input type="date" name="data_pagamento" value="<%= Date.today.to_s %>" required>
+        <button type="submit">Registrar Pagamento</button>
+      </form>
+      <h3>Histórico de Pagamentos</h3>
+      <% if @historico_pagamentos && @historico_pagamentos.any? %>
+        <table>
+          <thead><tr><th>Data</th><th>Valor</th></tr></thead>
+          <tbody>
+            <% @historico_pagamentos.each do |pagamento| %>
+              <tr>
+                <td><%= pagamento['data_pagamento'].strftime('%d/%m/%Y') %></td>
+                <td>R$ <%= '%.2f' % pagamento['valor_pago'] %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p>Nenhum pagamento registrado.</p>
+      <% end %>
+    <% else %>
+      <p>Este aluno não possui uma assinatura ativa.</p>
+    <% end %>
+  </section>
+
+  <section class="card">
+    <h2>Histórico de Graduação</h2>
+    <h3 class="form-title">Registrar Nova Graduação</h3>
+    <form action="/graduacoes" method="POST">
+      <input type="hidden" name="aluno_id" value="<%= @aluno['id'] %>">
+      <label for="faixa">Nova Faixa/Grau:</label>
+      <input type="text" name="faixa" required>
+      <label for="data_graduacao">Data:</label>
+      <input type="date" name="data_graduacao" value="<%= Date.today.to_s %>" required>
+      <button type="submit">Registrar</button>
+    </form>
+    <% if @graduacoes && @graduacoes.any? %>
+      <ul><% @graduacoes.each do |g| %><li><%= g['faixa'] %> em <%= g['data_graduacao'].strftime('%d/%m/%Y') %></li><% end %></ul>
+    <% else %>
+      <p>Nenhuma graduação registrada.</p>
+    <% end %>
+  </section>
+
+  <section class="card">
+    <h2>Histórico de Presença</h2>
+    <p><strong>Total de Aulas:</strong> <%= @total_aulas %></p>
+    <p><strong>Presenças:</strong> <%= @presencas %></p>
+    <p><strong>Faltas:</strong> <%= @faltas %></p>
+    <p>O registro de presença é feito na <a href="/aulas">página de Aulas</a>.</p>
+  </section>
+</div>

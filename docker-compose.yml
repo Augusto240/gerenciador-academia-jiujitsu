@@ -5,6 +5,8 @@ services:
       - "4567:4567"
     volumes:
       - .:/usr/src/app
+    entrypoint: ["./docker-entrypoint.sh"]
+    command: ["bundle", "exec", "ruby", "app.rb", "-o", "0.0.0.0"]
     environment:
       DATABASE_HOST: db
       DATABASE_USER: jiujitsu_user
@@ -16,8 +18,8 @@ services:
   db:
     image: mariadb:10.11
     restart: always
-    ports: 
-    - "3307:3306"
+    ports:
+      - "3307:3306"
     environment:
       MARIADB_ROOT_PASSWORD: sua_senha_root_aqui
       MARIADB_DATABASE: academia_jiujitsu
@@ -25,8 +27,8 @@ services:
       MARIADB_PASSWORD: senha_forte_123
     volumes:
       - mariadb_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-
+      # Monta a pasta inteira. Os scripts dentro dela serão executados em ordem alfabética.
+      - ./initdb:/docker-entrypoint-initdb.d:ro
 
 volumes:
   mariadb_data: {}

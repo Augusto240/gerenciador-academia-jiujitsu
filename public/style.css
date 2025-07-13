@@ -1,153 +1,394 @@
-/* public/style.css */
+/* ========================================= */
+/* ==   GERAL E NOVA IDENTIDADE VISUAL    == */
+/* ========================================= */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+:root {
+  --cor-fundo: #f8f9fa;
+  --cor-surface: #ffffff;
+  --cor-primaria: #2c3e50;
+  --cor-secundaria: #3498db;
+  --cor-texto: #34495e;
+  --cor-texto-claro: #7f8c8d;
+  --cor-borda: #dee2e6;
+  --cor-sucesso: #28a745;
+  --cor-erro: #dc3545;
+  --cor-aviso: #ffc107;
+  --sombra-card: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
 
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    color: #333;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
     line-height: 1.6;
+    margin: 0;
 }
 
 .container {
-    max-width: 960px;
-    margin: 20px auto;
+    max-width: 1100px;
+    margin: 30px auto;
     padding: 20px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
+/* ========================================= */
+/* ==     CABEÇALHO E NAVEGAÇÃO           == */
+/* ========================================= */
 header {
     text-align: center;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 20px;
+    margin-bottom: 40px;
+    padding-bottom: 0;
+    border-bottom: none;
 }
 
 .logo {
-    max-width: 150px;
-    margin-bottom: 10px;
+    max-width: 120px;
+    margin-bottom: 15px;
 }
 
-h1, h2 {
-    color: #0056b3;
+header h1 {
+    color: var(--cor-primaria);
+    font-size: 2.5em;
+    margin: 0;
 }
 
-.form-section, .list-section {
+.main-nav {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    background-color: var(--cor-surface);
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: var(--sombra-card);
     margin-bottom: 30px;
 }
 
+.main-nav a {
+    text-decoration: none;
+    color: var(--cor-texto);
+    font-weight: 500;
+    padding: 10px 20px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.main-nav a:hover {
+    background-color: var(--cor-primaria);
+    color: white;
+}
+
+
+/* ========================================= */
+/* ==      CARDS E SEÇÕES                 == */
+/* ========================================= */
+.main-content-grid {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 30px;
+    align-items: start;
+}
+
+.card {
+    background: var(--cor-surface);
+    border: 1px solid var(--cor-borda);
+    border-radius: 12px;
+    padding: 25px 30px;
+    box-shadow: var(--sombra-card);
+    margin-bottom: 30px;
+}
+
+.card h2 {
+    margin-top: 0;
+    border-bottom: 1px solid var(--cor-borda);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+    color: var(--cor-primaria);
+    font-size: 1.5em;
+}
+
+.stats-card {
+    background: linear-gradient(135deg, var(--cor-primaria), #34495e);
+    color: white;
+    padding: 25px;
+    margin-bottom: 30px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.stats-card h2 {
+    margin: 0;
+    color: white;
+    font-size: 1.8em;
+    font-weight: 700;
+}
+
+
+/* ========================================= */
+/* ==      FORMULÁRIOS E INPUTS           == */
+/* ========================================= */
 form {
     display: flex;
     flex-direction: column;
-}
-
-form input[type="text"],
-form input[type="date"] {
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    gap: 15px;
 }
 
 form label {
-    margin-bottom: 5px;
-    font-weight: bold;
+    margin-bottom: -10px;
+    font-weight: 500;
+    font-size: 0.9em;
+    color: var(--cor-texto-claro);
 }
 
-button {
-    padding: 10px 15px;
+form input[type="text"],
+form input[type="date"],
+form input[type="number"],
+form select {
+    padding: 12px 15px;
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    font-size: 1em;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    background-color: #fdfdfd;
+}
+
+form input:focus, form select:focus {
+    outline: none;
+    border-color: var(--cor-secundaria);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+.filter-form {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    align-items: end;
+}
+
+.filter-form .button-group {
+    display: flex;
+    gap: 10px;
+}
+
+/* Checkbox */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 5px 0;
+}
+.checkbox-container input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--cor-primaria);
+}
+.checkbox-container label {
+    margin: 0;
+    font-weight: 400;
+    color: var(--cor-texto);
+}
+
+
+/* ========================================= */
+/* ==      BOTÕES                         == */
+/* ========================================= */
+
+/* Estilo Base para todos os botões e links-botão */
+.btn, button, .btn-limpar, .btn-cancelar, .btn-voltar, .btn-editar, .btn-ver {
+    padding: 12px 20px;
     border: none;
-    background: #0056b3;
-    color: #fff;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 1em;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
-button:hover {
-    background: #004494;
+.btn:hover, button:hover, .btn-limpar:hover, .btn-cancelar:hover, .btn-voltar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
+/* Botão principal de formulário */
+button[type="submit"] {
+    background-color: var(--cor-primaria);
+    color: white;
+}
+button[type="submit"]:hover {
+    background-color: #34495e;
+}
+
+/* Botões de Ação Secundária (Cinza) */
+.btn-limpar, .btn-cancelar, .btn-voltar {
+    background-color: #bdc3c7;
+    color: #2c3e50;
+}
+.btn-limpar:hover, .btn-cancelar:hover, .btn-voltar:hover {
+    background-color: #95a5a6;
+}
+
+/* Estilo unificado para os botões de ação na tabela */
+.actions .btn-ver,
+.actions .btn-editar,
+button.btn-remover {
+    padding: 8px 14px;
+    font-size: 0.9em;
+    color: white;
+    border-radius: 6px;
+    line-height: 1.5; /* Garante mesma altura da linha */
+}
+
+/* Cores específicas dos botões de ação */
+.btn-ver {
+    background-color: var(--cor-secundaria);
+    color: white;
+}
+.btn-editar {
+    background-color: var(--cor-sucesso);
+    color: white;
+}
+button.btn-remover {
+    background-color: var(--cor-erro);
+    font-family: 'Inter', sans-serif;
+}
+
+.btn-ver:hover, .btn-editar:hover, button.btn-remover:hover {
+    transform: translateY(-1px);
+    color: white; /* Garante que a cor do texto não mude */
+    text-decoration: none; /* Garante que não tenha sublinhado */
+}
+
+.btn-ver:hover { background-color: #2980b9; }
+.btn-editar:hover { background-color: #218838; }
+button.btn-remover:hover { background-color: #c82333; }
+
+/* ========================================= */
+/* ==      TABELAS                        == */
+/* ========================================= */
 table {
     width: 100%;
     border-collapse: collapse;
+    margin-top: 20px;
 }
 
 th, td {
-    padding: 12px;
-    border: 1px solid #ddd;
+    padding: 15px;
     text-align: left;
+    border-bottom: 1px solid var(--cor-borda);
 }
 
 th {
-    background-color: #f2f2f2;
+    background-color: var(--cor-fundo);
+    font-weight: 500;
+    color: var(--cor-texto-claro);
+    font-size: 0.9em;
+    text-transform: uppercase;
 }
 
-.actions a, .actions button {
+tbody tr:hover {
+    background-color: #ecf0f1;
+}
+
+td.actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+td a {
+    color: var(--cor-secundaria);
     text-decoration: none;
-    padding: 5px 10px;
-    border-radius: 4px;
-    color: white;
-    font-size: 14px;
-    margin-right: 5px;
+    font-weight: 500;
+}
+td a:hover {
+    text-decoration: underline;
 }
 
-.btn-editar {
-    background-color: #28a745;
-}
-
-.btn-remover {
-    background-color: #dc3545;
-}
-
-.btn-cancelar {
-    display: inline-block;
-    padding: 10px 15px;
-    background-color: #6c757d;
-    color: white;
+/* Tira o sublinhado padrão dos links DENTRO da célula de ações */
+td.actions a {
     text-decoration: none;
-    border-radius: 4px;
-    text-align: center;
-    margin-top: 10px;
 }
 
 /* ========================================= */
-/* == Estilos para os Menus de Seleção  == */
+/* ==      PÁGINA DE DETALHES             == */
 /* ========================================= */
-
-form select {
-    /* Propriedades para igualar aos outros campos */
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-    background-color: white;
-    height: 40px; /* Altura consistente */
-
-    /* A mágica para remover o estilo padrão do navegador */
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-
-    /* Adiciona a nossa própria seta customizada */
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%230056b3%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
-    background-repeat: no-repeat;
-    background-position: right 10px top 50%;
-    background-size: 14px auto;
+.aluno-detalhes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 30px;
 }
 
-/* ========================================= */
-/* == Estilos para Mensagens de Feedback  == */
-/* ========================================= */
+.card p {
+    margin: 8px 0;
+}
 
+.card ul {
+  list-style: none;
+  padding: 0;
+}
+.card ul li {
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.card ul li:last-child {
+  border-bottom: none;
+}
+
+.card h3.form-title {
+  font-size: 1.2em;
+  margin-top: 30px;
+  margin-bottom: 15px;
+  color: var(--cor-primaria);
+}
+
+.status-mensalidade {
+  padding: 3px 10px;
+  border-radius: 12px;
+  color: white;
+  font-weight: 500;
+  font-size: 0.85em;
+  display: inline-block;
+}
+
+.status-em-dia    { background-color: var(--cor-sucesso); }
+.status-atrasado  { background-color: var(--cor-erro); }
+.status-pendente  { background-color: var(--cor-aviso); color: #333; }
+.status-inativa   { background-color: var(--cor-texto-claro); }
+
+/* ========================================= */
+/* ==   MENSAGENS E ALERTAS & RODAPÉ      == */
+/* ========================================= */
 .alert-sucesso {
     padding: 15px;
     margin-bottom: 20px;
     border: 1px solid transparent;
-    border-radius: 4px;
-    color: #155724;
-    background-color: #d4edda;
-    border-color: #c3e6cb;
+    border-radius: 8px;
+    color: #0f5132;
+    background-color: #d1e7dd;
+    border-color: #badbcc;
     text-align: center;
+    font-weight: 500;
+}
+
+footer {
+  text-align: center;
+  padding: 25px;
+  margin-top: 50px;
+  border-top: 1px solid var(--cor-borda);
+  color: var(--cor-texto-claro);
+  font-size: 0.9em;
+}
+footer p {
+  margin: 5px 0;
+}
+footer a {
+  color: var(--cor-primaria);
+  text-decoration: none;
+  font-weight: 500;
+}
+footer a:hover {
+  text-decoration: underline;
 }
