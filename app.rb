@@ -2,6 +2,13 @@
 require 'sinatra'
 require 'mysql2'
 require 'date'
+require 'bigdecimal'
+
+# DEBUG: Imprimir variáveis de ambiente para verificar se estão sendo carregadas
+puts "=> DATABASE_HOST: #{ENV['DATABASE_HOST']}"
+puts "=> DATABASE_USER: #{ENV['DATABASE_USER']}"
+puts "=> DATABASE_NAME: #{ENV['DATABASE_NAME']}"
+puts "=> Conectando ao banco de dados..."
 
 use Rack::MethodOverride
 enable :sessions
@@ -20,6 +27,10 @@ def create_db_client
     password: ENV['DATABASE_PASSWORD'],
     database: ENV['DATABASE_NAME']
   )
+  puts "=> Conexão com o banco de dados bem-sucedida!"
+rescue => e
+  puts "!!!!!!!!!! FALHA AO CONECTAR AO BANCO: #{e.message}"
+end
 end
 
 # --- ROTA PRINCIPAL (COM BUSCA E FILTROS) ---
