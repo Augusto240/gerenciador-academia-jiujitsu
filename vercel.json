@@ -1,0 +1,14 @@
+{
+  "builds": [
+    {
+      "src": "app.rb",
+      "use": "@vercel/ruby"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/app.rb"
+    }
+  ]
+}
