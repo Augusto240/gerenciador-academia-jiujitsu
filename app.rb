@@ -64,28 +64,30 @@ end
 
 # --- CRUD DE ALUNOS ---
 post '/alunos' do
-  client          = create_db_client
-  nome            = client.escape(params['nome'])
-  data_nascimento = client.escape(params['data_nascimento'])
-  cor_faixa       = client.escape(params['cor_faixa'])
-  turma           = client.escape(params['turma'])
-  bolsista        = params['bolsista'] == 'on' ? 1 : 0
+  client = create_db_client
+  nome = client.escape(params['nome'])
+  data_nascimento = params['data_nascimento'].empty? ? "NULL" : "'#{client.escape(params['data_nascimento'])}'"
+  cor_faixa = client.escape(params['cor_faixa'])
+  turma = client.escape(params['turma'])
+  bolsista = params['bolsista'] == 'on' ? 1 : 0
 
-  client.query(<<~SQL)
-    INSERT INTO alunos(nome, data_nascimento, cor_faixa, turma, bolsista)
-    VALUES ('#{nome}', '#{data_nascimento}', '#{cor_faixa}', '#{turma}', #{bolsista})
-  SQL
+  # Novos campos de anamnese
+  saude_problema = client.escape(params['saude_problema'])
+  saude_medicacao = client.escape(params['saude_medicacao'])
+  saude_lesao = client.escape(params['saude_lesao'])
+  saude_substancia = client.escape(params['saude_substancia'])
 
-  aluno_id         = client.last_id
+  query_aluno = "INSERT INTO alunos(nome, data_nascimento, cor_faixa, turma, bolsista, saude_problema, saude_medicacao, saude_lesao, saude_substancia) VALUES ('#{nome}', #{data_nascimento}, '#{cor_faixa}', '#{turma}', #{bolsista}, '#{saude_problema}', '#{saude_medicacao}', '#{saude_lesao}', '#{saude_substancia}')"
+  client.query(query_aluno)
+  
+  aluno_id = client.last_id
   valor_mensalidade = bolsista == 1 ? 0.00 : 70.00
 
-  client.query(<<~SQL)
-    INSERT INTO assinaturas(aluno_id, plano_id, valor_mensalidade, status)
-    VALUES (#{aluno_id}, 1, #{valor_mensalidade}, 'ativa')
-  SQL
+  query_assinatura = "INSERT INTO assinaturas(aluno_id, plano_id, valor_mensalidade, status) VALUES (#{aluno_id}, 1, #{valor_mensalidade}, 'ativa')"
+  client.query(query_assinatura)
 
   session[:mensagem_sucesso] = "Aluno cadastrado com sucesso! Assinatura ativada."
-  redirect '/'
+  redirect '/' 
 end
 
 get '/alunos/:id/editar' do
@@ -97,27 +99,27 @@ get '/alunos/:id/editar' do
 end
 
 put '/alunos/:id' do
-  client          = create_db_client
-  id              = params['id']
-  nome            = client.escape(params['nome'])
-  data_nascimento = client.escape(params['data_nascimento'])
-  cor_faixa       = client.escape(params['cor_faixa'])
-  turma           = client.escape(params['turma'])
-  bolsista        = params['bolsista'] == 'on' ? 1 : 0
+  client = create_db_client
+  id = params['id']
+  nome = client.escape(params['nome'])
+  data_nascimento = params['data_nascimento'].empty? ? "NULL" : "'#{client.escape(params['data_nascimento'])}'"
+  cor_faixa = client.escape(params['cor_faixa'])
+  turma = client.escape(params['turma'])
+  bolsista = params['bolsista'] == 'on' ? 1 : 0
 
-  client.query(<<~SQL)
-    UPDATE alunos
-    SET nome = '#{nome}',
-        data_nascimento = '#{data_nascimento}',
-        cor_faixa = '#{cor_faixa}',
-        turma = '#{turma}',
-        bolsista = #{bolsista}
-    WHERE id = #{id}
-  SQL
+  # Novos campos de anamnese
+  saude_problema = client.escape(params['saude_problema'])
+  saude_medicacao = client.escape(params['saude_medicacao'])
+  saude_lesao = client.escape(params['saude_lesao'])
+  saude_substancia = client.escape(params['saude_substancia'])
 
+  query = "UPDATE alunos SET nome = '#{nome}', data_nascimento = #{data_nascimento}, cor_faixa = '#{cor_faixa}', turma = '#{turma}', bolsista = #{bolsista}, saude_problema = '#{saude_problema}', saude_medicacao = '#{saude_medicacao}', saude_lesao = '#{saude_lesao}', saude_substancia = '#{saude_substancia}' WHERE id = #{id}"
+  client.query(query)
+  
   session[:mensagem_sucesso] = "Dados do aluno atualizados com sucesso!"
   redirect "/alunos/#{id}"
 end
+
 
 delete '/alunos/:id' do
   client = create_db_client

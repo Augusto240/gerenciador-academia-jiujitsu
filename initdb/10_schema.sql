@@ -11,10 +11,14 @@ CREATE TABLE IF NOT EXISTS alunos (
   data_nascimento DATE,
   cor_faixa VARCHAR(50),
   turma VARCHAR(50),
-  bolsista BOOLEAN DEFAULT FALSE -- NOVA COLUNA
+  bolsista BOOLEAN DEFAULT FALSE,
+  saude_problema TEXT,
+  saude_medicacao TEXT,
+  saude_lesao TEXT,
+  saude_substancia TEXT
 );
 
--- Tabela de Planos (com o plano padrão)
+-- Tabela de Planos
 CREATE TABLE IF NOT EXISTS planos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
@@ -50,14 +54,15 @@ CREATE TABLE IF NOT EXISTS graduacoes (
     FOREIGN KEY (aluno_id) REFERENCES alunos(id) ON DELETE CASCADE
 );
 
--- Tabela de Aulas (NOVA)
+-- Tabela de Aulas (com a coluna 'turma')
 CREATE TABLE IF NOT EXISTS aulas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     data_aula DATE NOT NULL,
+    turma VARCHAR(50),
     descricao VARCHAR(255)
 );
 
--- Tabela de Presenças (NOVA)
+-- Tabela de Presenças
 CREATE TABLE IF NOT EXISTS presencas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     aluno_id INT NOT NULL,
@@ -65,12 +70,10 @@ CREATE TABLE IF NOT EXISTS presencas (
     presente BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (aluno_id) REFERENCES alunos(id) ON DELETE CASCADE,
     FOREIGN KEY (aula_id) REFERENCES aulas(id) ON DELETE CASCADE,
-    UNIQUE(aluno_id, aula_id) -- Garante que um aluno não possa ter presença duplicada na mesma aula
+    UNIQUE(aluno_id, aula_id)
 );
 
-
 -- --- DADOS DE EXEMPLO ---
-
 INSERT INTO planos (id, nome, valor) VALUES (1, 'Plano Padrão', 70.00);
 
 INSERT INTO alunos (id, nome, data_nascimento, cor_faixa, turma, bolsista) VALUES

@@ -31,6 +31,20 @@
         <label for="bolsista">Este aluno é bolsista?</label>
       </div>
 
+      <h3 class="form-title">Anamnese</h3>
+
+      <label for="saude_problema">Tem algum problema de saúde?</label>
+      <textarea id="saude_problema" name="saude_problema" rows="3"><%= @aluno['saude_problema'] %></textarea>
+      
+      <label for="saude_medicacao">Toma alguma medicação?</label>
+      <textarea id="saude_medicacao" name="saude_medicacao" rows="3"><%= @aluno['saude_medicacao'] %></textarea>
+      
+      <label for="saude_lesao">Já teve alguma lesão?</label>
+      <textarea id="saude_lesao" name="saude_lesao" rows="3"><%= @aluno['saude_lesao'] %></textarea>
+      
+      <label for="saude_substancia">Faz ou já fez uso de alguma substância?</label>
+      <textarea id="saude_substancia" name="saude_substancia" rows="3"><%= @aluno['saude_substancia'] %></textarea>
+
       <button type="submit">Salvar Alterações</button>
       <a href="/alunos/<%= @aluno['id'] %>" class="btn-cancelar">Cancelar</a>
     </form>

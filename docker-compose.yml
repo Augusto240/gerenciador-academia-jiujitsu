@@ -5,6 +5,8 @@ services:
       - "4567:4567"
     volumes:
       - .:/usr/src/app
+    entrypoint: ["./docker-entrypoint.sh"]
+    command: ["bundle", "exec", "ruby", "app.rb", "-o", "0.0.0.0"]
     environment:
       DATABASE_HOST: db
       DATABASE_USER: jiujitsu_user
@@ -25,10 +27,8 @@ services:
       MARIADB_PASSWORD: senha_forte_123
     volumes:
       - mariadb_data:/var/lib/mysql
-      # Carrega primeiro o schema para criar as tabelas
-      - ./schema.sql:/docker-entrypoint-initdb.d/10_schema.sql:ro
-      # Carrega em seguida os dados para popular as tabelas
-      - ./data.sql:/docker-entrypoint-initdb.d/20_data.sql:ro
+      # Monta a pasta inteira. Os scripts dentro dela serão executados em ordem alfabética.
+      - ./initdb:/docker-entrypoint-initdb.d:ro
 
 volumes:
   mariadb_data: {}

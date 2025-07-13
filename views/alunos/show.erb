@@ -11,15 +11,22 @@
     <p><strong>Data de Nascimento:</strong> <%= @aluno['data_nascimento'] ? @aluno['data_nascimento'].strftime('%d/%m/%Y') : 'N/A' %></p>
     <p><strong>Faixa Atual:</strong> <%= @aluno['cor_faixa'] %></p>
     <p><strong>Turma:</strong> <%= @aluno['turma'] %></p>
-        <br>
-        <a href="/alunos/<%= @aluno['id'] %>/editar" class="btn-editar">Editar Dados</a>
-      </section>
+    <br>
+    <a href="/alunos/<%= @aluno['id'] %>/editar" class="btn-editar">Editar Dados</a>
+  </section>
+  
+  <section class="card">
+    <h2>Anamnese</h2>
+    <p><strong>Problema de saúde:</strong> <%= @aluno['saude_problema'] && !@aluno['saude_problema'].empty? ? @aluno['saude_problema'] : 'Não informado' %></p>
+    <p><strong>Uso de medicação:</strong> <%= @aluno['saude_medicacao'] && !@aluno['saude_medicacao'].empty? ? @aluno['saude_medicacao'] : 'Não informado' %></p>
+    <p><strong>Histórico de lesões:</strong> <%= @aluno['saude_lesao'] && !@aluno['saude_lesao'].empty? ? @aluno['saude_lesao'] : 'Não informado' %></p>
+    <p><strong>Uso de substâncias:</strong> <%= @aluno['saude_substancia'] && !@aluno['saude_substancia'].empty? ? @aluno['saude_substancia'] : 'Não informado' %></p>
+  </section>
 
   <section class="card">
     <h2>Mensalidades</h2>
     <% if @assinatura %>
       <p><strong>Status:</strong> <span class="status-mensalidade <%= @cor_status %>"><%= @status_mensalidade %></span></p>
-      
       <h3 class="form-title">Registrar Novo Pagamento</h3>
       <form action="/pagamentos" method="POST">
         <input type="hidden" name="assinatura_id" value="<%= @assinatura['id'] %>">
@@ -30,7 +37,6 @@
         <input type="date" name="data_pagamento" value="<%= Date.today.to_s %>" required>
         <button type="submit">Registrar Pagamento</button>
       </form>
-
       <h3>Histórico de Pagamentos</h3>
       <% if @historico_pagamentos && @historico_pagamentos.any? %>
         <table>
@@ -72,7 +78,7 @@
 
   <section class="card">
     <h2>Histórico de Presença</h2>
-    <p><strong>Aulas dadas:</strong> <%= @total_aulas %></p>
+    <p><strong>Total de Aulas:</strong> <%= @total_aulas %></p>
     <p><strong>Presenças:</strong> <%= @presencas %></p>
     <p><strong>Faltas:</strong> <%= @faltas %></p>
     <p>O registro de presença é feito na <a href="/aulas">página de Aulas</a>.</p>
