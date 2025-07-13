@@ -31,8 +31,6 @@ def create_db_client
 rescue => e
   puts "!!!!!!!!!! FALHA AO CONECTAR AO BANCO: #{e.message}"
 end
-end
-
 # --- ROTA PRINCIPAL (COM BUSCA E FILTROS) ---
 get '/' do
   client = create_db_client
