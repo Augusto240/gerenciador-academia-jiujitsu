@@ -1,103 +1,98 @@
 <header>
-  <img src="/logo.png" alt="Logo da Academia" class="logo">
-  <h1>Controle de Alunos</h1>
+    <img src="/logo.png" alt="Logo da Academia" class="logo">
+    <h1>Controle de Alunos</h1>
 </header>
 
 <section class="stats-card">
-  <h2>Total de Alunos: <%= @total_alunos %></h2>
+  <h2>Total de Alunos Ativos: <%= @total_alunos %></h2>
 </section>
 
-<section class="search-section card">
-  <h2>Buscar e Filtrar Alunos</h2>
-  <form action="/" method="GET" class="filter-form">
-    <input type="text" name="busca" placeholder="Buscar por nome..." value="<%= params[:busca] %>">
-    
-    <select name="faixa">
-      <option value="">Todas as Faixas</option>
-      <% @faixas.each do |faixa| %>
-        <option value="<%= faixa %>" <%= 'selected' if params[:faixa] == faixa %>><%= faixa %></option>
-      <% end %>
-    </select>
-
-    <select name="turma">
-      <option value="">Todas as Turmas</option>
-      <% @turmas.each do |turma| %>
-        <option value="<%= turma %>" <%= 'selected' if params[:turma] == turma %>><%= turma %></option>
-      <% end %>
-    </select>
-
-    <div class="button-group">
-      <button type="submit">Filtrar</button>
-      <a href="/" class="btn-limpar">Limpar</a>
-    </div>
-  </form>
+<section class="card">
+    <h2>Buscar e Filtrar Alunos</h2>
+    <form action="/" method="GET" class="filter-form">
+        <input type="text" name="busca" placeholder="Buscar por nome..." value="<%= params[:busca] %>">
+        <select name="faixa">
+            <option value="">Todas as Faixas</option>
+            <% @faixas.each do |faixa| %>
+                <option value="<%= faixa %>" <%= 'selected' if params[:faixa] == faixa %>><%= faixa %></option>
+            <% end %>
+        </select>
+        <select name="turma">
+            <option value="">Todas as Turmas</option>
+            <% @turmas.each do |turma| %>
+                <option value="<%= turma %>" <%= 'selected' if params[:turma] == turma %>><%= turma %></option>
+            <% end %>
+        </select>
+        <div class="button-group">
+            <button type="submit">Filtrar</button>
+            <a href="/" class="btn-limpar">Limpar</a>
+        </div>
+    </form>
 </section>
 
-<section class="form-section card">
-  <h2>Cadastrar Novo Aluno</h2>
-  <form action="/alunos" method="POST">
-    <input type="text" name="nome" placeholder="Nome completo" required>
+<div class="main-content-grid">
+    <section class="form-section card">
+        <h2>Cadastrar Novo Aluno</h2>
+        <form action="/alunos" method="POST">
+            <label for="nome">Nome completo</label>
+            <input type="text" id="nome" name="nome" placeholder="Nome do aluno" required>
 
-    <label for="cor_faixa">Faixa:</label>
-    <select name="cor_faixa" id="cor_faixa">
-      <% @faixas.each do |faixa| %>
-        <option value="<%= faixa %>"><%= faixa %></option>
-      <% end %>
-    </select>
+            <label for="cor_faixa">Faixa</label>
+            <select name="cor_faixa" id="cor_faixa">
+              <% @faixas.each do |faixa| %>
+                <option value="<%= faixa %>"><%= faixa %></option>
+              <% end %>
+            </select>
 
-    <label for="data_nascimento">Data de Nascimento:</label>
-    <input type="date" name="data_nascimento">
+            <label for="data_nascimento">Data de Nascimento</label>
+            <input type="date" id="data_nascimento" name="data_nascimento">
 
-    <label for="turma">Turma:</label>
-    <select name="turma" id="turma">
-      <% @turmas.each do |turma| %>
-        <option value="<%= turma %>"><%= turma %></option>
-      <% end %>
-    </select>
+            <label for="turma">Turma</label>
+            <select name="turma" id="turma">
+              <% @turmas.each do |turma| %>
+                <option value="<%= turma %>"><%= turma %></option>
+              <% end %>
+            </select>
 
-    <div class="checkbox-container">
-      <input type="checkbox" id="bolsista" name="bolsista">
-      <label for="bolsista">Este aluno é bolsista?</label>
-    </div>
+            <div class="checkbox-container">
+              <input type="checkbox" id="bolsista" name="bolsista">
+              <label for="bolsista">É bolsista?</label>
+            </div>
 
-    <button type="submit">Cadastrar</button>
-  </form>
-</section>
+            <button type="submit">Cadastrar Aluno</button>
+        </form>
+    </section>
 
-<section class="list-section">
-  <h2>Alunos Cadastrados</h2>
-
-  <% if @alunos.any? %>
-    <table class="alunos-table">
-      <thead>
-        <tr>
-          <th>Nome</th>
-          <th>Idade</th>
-          <th>Faixa</th>
-          <th>Turma</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @alunos.each do |aluno| %>
-          <tr>
-            <td><%= aluno['nome'] %></td>
-            <td><%= aluno['idade'] %></td>
-            <td><%= aluno['cor_faixa'] %></td>
-            <td><%= aluno['turma'] %></td>
-            <td>
-              <a href="/alunos/<%= aluno['id'] %>">Ver</a> |
-              <a href="/alunos/<%= aluno['id'] %>/editar">Editar</a> |
-              <form action="/alunos/<%= aluno['id'] %>" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja remover este aluno?');">
-                <input type="hidden" name="_method" value="DELETE">
-                <button type="submit">Excluir</button>
-              </form>
-            </td>
-          </tr>
+    <section class="list-section card">
+        <h2>Alunos Cadastrados</h2>
+        <% if @alunos.any? %>
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Idade</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @alunos.each do |aluno| %>
+                <tr>
+                  <td><a href="/alunos/<%= aluno['id'] %>" title="Ver detalhes de <%= aluno['nome'] %>"><%= aluno['nome'] %></a></td>
+                  <td><%= aluno['idade'] %></td>
+                    <td class="actions">
+                    <a href="/alunos/<%= aluno['id'] %>" class="btn-ver" title="Ver detalhes">Ver</a>
+                    <a href="/alunos/<%= aluno['id'] %>/editar" class="btn-editar">Editar</a>
+                    <form action="/alunos/<%= aluno['id'] %>" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza?');">
+                        <input type="hidden" name="_method" value="DELETE">
+                        <button type="submit" class="btn-remover">Remover</button>
+                    </form>
+                    </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        <% else %>
+          <p>Nenhum aluno encontrado com os filtros atuais.</p>
         <% end %>
-      </tbody>
-    </table>
-  <% else %>
-    <p>Nenhum aluno encontrado.</p>
-  <% end %>
-</section>
+    </section>
+</div>

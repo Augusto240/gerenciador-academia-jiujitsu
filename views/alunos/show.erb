@@ -11,8 +11,9 @@
     <p><strong>Data de Nascimento:</strong> <%= @aluno['data_nascimento'] ? @aluno['data_nascimento'].strftime('%d/%m/%Y') : 'N/A' %></p>
     <p><strong>Faixa Atual:</strong> <%= @aluno['cor_faixa'] %></p>
     <p><strong>Turma:</strong> <%= @aluno['turma'] %></p>
-    <a href="/alunos/<%= @aluno['id'] %>/editar" class="btn-editar">Editar Dados</a>
-  </section>
+        <br>
+        <a href="/alunos/<%= @aluno['id'] %>/editar" class="btn-editar">Editar Dados</a>
+      </section>
 
   <section class="card">
     <h2>Mensalidades</h2>
