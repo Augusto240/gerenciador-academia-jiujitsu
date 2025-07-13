@@ -2,7 +2,10 @@
   "builds": [
     {
       "src": "app.rb",
-      "use": "@vercel/ruby"
+      "use": "@vercel/ruby",
+      "config": {
+        "systemDependencies": ["libmysqlclient-dev"]
+      }
     }
   ],
   "rewrites": [
