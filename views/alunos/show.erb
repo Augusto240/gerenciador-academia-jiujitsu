@@ -7,6 +7,7 @@
   <section class="card">
     <h2>Dados Cadastrais</h2>
     <p><strong>Nome:</strong> <%= @aluno['nome'] %></p>
+    <p><strong>Status:</strong> <%= @aluno['bolsista'] == 1 ? 'Bolsista' : 'Pagante' %></p>
     <p><strong>Data de Nascimento:</strong> <%= @aluno['data_nascimento'] ? @aluno['data_nascimento'].strftime('%d/%m/%Y') : 'N/A' %></p>
     <p><strong>Faixa Atual:</strong> <%= @aluno['cor_faixa'] %></p>
     <p><strong>Turma:</strong> <%= @aluno['turma'] %></p>
@@ -22,7 +23,7 @@
       <form action="/pagamentos" method="POST">
         <input type="hidden" name="assinatura_id" value="<%= @assinatura['id'] %>">
         <input type="hidden" name="aluno_id" value="<%= @aluno['id'] %>">
-        <label for="valor_pago">Valor Pago:</label>
+        <label for="valor_pago">Valor Pago (R$):</label>
         <input type="number" step="0.01" name="valor_pago" value="<%= @assinatura['valor_mensalidade'] %>" required>
         <label for="data_pagamento">Data do Pagamento:</label>
         <input type="date" name="data_pagamento" value="<%= Date.today.to_s %>" required>
@@ -32,12 +33,7 @@
       <h3>Histórico de Pagamentos</h3>
       <% if @historico_pagamentos && @historico_pagamentos.any? %>
         <table>
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Valor</th>
-            </tr>
-          </thead>
+          <thead><tr><th>Data</th><th>Valor</th></tr></thead>
           <tbody>
             <% @historico_pagamentos.each do |pagamento| %>
               <tr>
@@ -50,7 +46,6 @@
       <% else %>
         <p>Nenhum pagamento registrado.</p>
       <% end %>
-
     <% else %>
       <p>Este aluno não possui uma assinatura ativa.</p>
     <% end %>
@@ -67,13 +62,8 @@
       <input type="date" name="data_graduacao" value="<%= Date.today.to_s %>" required>
       <button type="submit">Registrar</button>
     </form>
-
     <% if @graduacoes && @graduacoes.any? %>
-      <ul>
-        <% @graduacoes.each do |graduacao| %>
-          <li><%= graduacao['faixa'] %> - <%= graduacao['data_graduacao'].strftime('%d/%m/%Y') %></li>
-        <% end %>
-      </ul>
+      <ul><% @graduacoes.each do |g| %><li><%= g['faixa'] %> em <%= g['data_graduacao'].strftime('%d/%m/%Y') %></li><% end %></ul>
     <% else %>
       <p>Nenhuma graduação registrada.</p>
     <% end %>
@@ -81,6 +71,9 @@
 
   <section class="card">
     <h2>Histórico de Presença</h2>
-    <p>Funcionalidade a ser implementada.</p>
+    <p><strong>Aulas dadas:</strong> <%= @total_aulas %></p>
+    <p><strong>Presenças:</strong> <%= @presencas %></p>
+    <p><strong>Faltas:</strong> <%= @faltas %></p>
+    <p>O registro de presença é feito na <a href="/aulas">página de Aulas</a>.</p>
   </section>
 </div>

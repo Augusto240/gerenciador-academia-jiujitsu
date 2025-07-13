@@ -7,9 +7,12 @@
     <link rel="stylesheet" href="/style.css">
     <link rel="icon" href="/logo.png" type="image/png" />
 </head>
-
 <body>
     <div class="container">
+        <nav class="main-nav">
+            <a href="/">Alunos</a>
+            <a href="/aulas">Aulas e Presença</a>
+        </nav>
         
         <% if session[:mensagem_sucesso] %>
             <div class="alert-sucesso">
@@ -19,12 +22,16 @@
 
         <%= yield %>
     </div>
-<footer>
-    <p>
-      &copy; <%= Time.now.year %> CTAG - Nísia Floresta & JPM Team. Desenvolvido por José Augusto de Oliveira Neto.
-      <a href="https://github.com/Augusto240" target="_blank">GitHub</a> |
-      <a href="https://augusto240.github.io/Personal-Site/" target="_blank">Portfólio</a>
-    </p>
-  </footer>
+    <footer>
+      <p>
+        &copy; <%= Time.now.year %> JPM Team. Todos os direitos reservados.
+        <br>
+        Desenvolvido por <strong>José Augusto de Oliveira Neto</strong>.
+      </p>
+      <p>
+        <a href="https://github.com/Augusto240/gerenciador-academia-jiujitsu" target="_blank">GitHub</a> |
+        <a href="https://augusto240.github.io/Personal-Site/" target="_blank">Portfólio</a>
+      </p>
+    </footer>
 </body>
-</html>`
+</html>

@@ -1,0 +1,57 @@
+<header>
+  <h1>Aulas e Presença</h1>
+</header>
+
+<section class="card form-section">
+  <h2>Registrar Nova Aula</h2>
+  <form action="/aulas" method="POST">
+    <label for="data_aula">Data da Aula:</label>
+    <input type="date" name="data_aula" value="<%= Date.today %>" required>
+
+    <label for="descricao">Descrição (opcional):</label>
+    <input type="text" name="descricao" placeholder="Ex: Treino de Passagem de Guarda">
+
+    <label for="turma">Para qual turma?</label>
+    <select name="turma" id="turma">
+      <option value="">— Escolha uma turma —</option>
+      <% TURMAS.each do |t| %>
+        <option value="<%= t %>"><%= t %></option>
+      <% end %>
+    </select>
+
+    <div class="checkbox-container">
+      <input type="checkbox" id="todas_turmas" name="todas_turmas">
+      <label for="todas_turmas">
+        Registrar presença para <strong>todos</strong> os alunos (independente da turma)
+      </label>
+    </div>
+
+    <button type="submit">Criar Aula e Abrir Lista de Presença</button>
+  </form>
+</section>
+
+<section class="list-section">
+  <h2>Aulas Registradas</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Descrição</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @aulas.each do |aula| %>
+        <tr>
+          <td><%= aula['data_aula'].strftime('%d/%m/%Y') %></td>
+          <td><%= aula['descricao'] %></td>
+          <td>
+            <a href="/aulas/<%= aula['id'] %>" class="btn-editar">
+              Ver / Editar Presença
+            </a>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>
