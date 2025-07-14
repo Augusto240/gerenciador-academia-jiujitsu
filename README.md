@@ -80,6 +80,7 @@ Graças ao Docker, iniciar todo o ambiente (aplicação + banco de dados) requer
 Para parar todo o ambiente, basta voltar ao terminal e pressionar `Ctrl` + `C`.
 
 ## Estrutura do Projeto
+```
 /
 ├── app.rb                   # O coração da aplicação Sinatra, com todas as rotas, lógica e padrões de design
 ├── Dockerfile               # A "receita" para construir a imagem Docker do aplicativo Ruby
@@ -93,7 +94,7 @@ Para parar todo o ambiente, basta voltar ao terminal e pressionar `Ctrl` + `C`.
 │   ├── /aulas/              # Templates relacionados a aulas
 │   └── /relatorios/         # Templates para relatórios
 └── README.md                # Este arquivo de documentação
-
+```
 
 ## Padrões de Design Implementados
 
