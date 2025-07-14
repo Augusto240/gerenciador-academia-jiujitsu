@@ -1,261 +1,472 @@
-# app.rb
+# app.rb (VERSÃO DE DEPURAÇÃO)
+
 require 'sinatra'
-require 'mysql2'
+require 'pg'
+require 'bcrypt'
 require 'date'
 
+# --- CONFIGURAÇÃO DA APLICAÇÃO ---
 use Rack::MethodOverride
 enable :sessions
+set :session_secret, ENV.fetch('SESSION_SECRET') { "uma_chave_super_secreta_e_aleatoria_para_desenvolvimento" }
 
-# --- CONSTANTES DE OPÇÕES ---
-FAIXAS = ['Branca', 'Cinza/Branca', 'Cinza', 'Cinza/Preta', 'Amarela/Branca', 'Amarela',
-          'Amarela/Preta', 'Laranja/Branca', 'Laranja', 'Laranja/Preta', 'Verde/Branca', 'Verde', 'Verde/Preta',
-          'Azul', 'Roxa', 'Marrom', 'Preta', 'Vermelha/Preta', 'Vermelha/Branca', 'Vermelha']
+# --- CONSTANTES ---
+FAIXAS = ['Branca', 'Cinza/Branca', 'Cinza', 'Cinza/Preta', 'Amarela/Branca', 'Amarela', 'Amarela/Preta', 'Laranja/Branca', 'Laranja', 'Laranja/Preta', 'Verde/Branca', 'Verde', 'Verde/Preta', 'Azul', 'Roxa', 'Marrom', 'Preta']
 TURMAS = ['Kids 2 a 3 anos', 'Kids', 'Adolescentes/Juvenil', 'Adultos', 'Feminino', 'Master/Sênior']
 
 # --- CONEXÃO COM O BANCO ---
 def create_db_client
-  Mysql2::Client.new(
-    host:     ENV['DATABASE_HOST'],
-    username: ENV['DATABASE_USER'],
-    password: ENV['DATABASE_PASSWORD'],
-    database: ENV['DATABASE_NAME']
-  )
+  if ENV['DATABASE_URL']
+    PG.connect(ENV['DATABASE_URL'])
+  else
+    PG.connect(host: 'db', user: 'jiujitsu_user', password: 'senha_forte_123', dbname: 'academia_jiujitsu_dev')
+  end
 end
 
-# --- ROTA PRINCIPAL (COM BUSCA E FILTROS) ---
+# --- HELPERS E AUTENTICAÇÃO ---
+helpers do
+  def logged_in?
+    !!session[:user_id]
+  end
+
+  def current_user
+    return nil unless logged_in?
+    client = create_db_client
+    @current_user ||= client.exec_params('SELECT id, nome, email FROM usuarios WHERE id = $1', [session[:user_id]]).first
+  ensure
+    client.close if client
+  end
+
+  # ESCAPA HTML para evitar XSS nas views
+  def h(text)
+    Rack::Utils.escape_html(text.to_s)
+  end
+end
+
+# --- FILTRO DE AUTENTICAÇÃO ---
+before do
+  pass if ['/login', '/style.css', '/logo.png'].include? request.path_info
+  redirect to('/login') unless logged_in?
+end
+
+# --- ROTAS DE AUTENTICAÇÃO ---
+get('/login') { erb :'auth/login', layout: false }
+
+# ================================================================
+# ========= INÍCIO DA ROTA DE LOGIN COM DEPURAÇÃO ================
+# ================================================================
+post '/login' do
+  client = create_db_client
+  begin
+    puts "\n\n"
+    puts "========================================"
+    puts "🕵️  INICIANDO TENTATIVA DE LOGIN 🕵️"
+    puts "========================================"
+
+    email_digitado = params[:email]
+    senha_digitada = params[:password]
+    
+    puts "[INFO] Email recebido do formulário: '#{email_digitado}'"
+    puts "[INFO] Senha recebida do formulário: '#{senha_digitada}'"
+
+    user = client.exec_params('SELECT * FROM usuarios WHERE email = $1', [email_digitado]).first
+    
+    if user
+      puts "[SUCESSO] Usuário encontrado no banco: #{user.inspect}"
+      stored_hash = user['password_digest']
+      puts "[INFO] Hash armazenado no banco: '#{stored_hash}'"
+      
+      bcrypt_object = BCrypt::Password.new(stored_hash)
+      puts "[INFO] Objeto BCrypt criado a partir do hash."
+
+      if bcrypt_object == senha_digitada
+        puts "[SUCESSO] 🎉 A SENHA CORRESPONDE! 🎉"
+        session[:user_id] = user['id']
+        redirect to('/')
+      else
+        puts "[ERRO] ❌ A SENHA NÃO CORRESPONDE! ❌"
+        session[:mensagem_erro] = "Email ou senha inválidos."
+        redirect to('/login')
+      end
+    else
+      puts "[ERRO] ❌ Usuário com email '#{email_digitado}' NÃO FOI ENCONTRADO no banco de dados."
+      session[:mensagem_erro] = "Email ou senha inválidos."
+      redirect to('/login')
+    end
+  ensure
+    puts "========================================"
+    puts "🕵️  FIM DA TENTATIVA DE LOGIN 🕵️"
+    puts "========================================"
+    puts "\n\n"
+    client.close if client
+  end
+end
+# ================================================================
+# ========= FIM DA ROTA DE LOGIN COM DEPURAÇÃO ===================
+# ================================================================
+
+get('/logout') do
+  session.clear
+  session[:mensagem_sucesso] = "Você saiu com segurança."
+  redirect to('/login')
+end
+
+# --- ROTAS PRINCIPAIS DA APLICAÇÃO ---
+
+# ROTA PRINCIPAL
 get '/' do
   client = create_db_client
-  query      = "SELECT id, nome, data_nascimento, cor_faixa, turma, bolsista FROM alunos"
-  conditions = []
+  begin
+    query = "SELECT id, nome, data_nascimento, cor_faixa, turma FROM alunos"
+    conditions = []
+    params_list = []
+    param_count = 1
 
-  if params[:busca] && !params[:busca].empty?
-    conditions << "nome LIKE '%#{client.escape(params[:busca])}%'"
-  end
-  if params[:faixa] && !params[:faixa].empty?
-    conditions << "cor_faixa = '#{client.escape(params[:faixa])}'"
-  end
-  if params[:turma] && !params[:turma].empty?
-    conditions << "turma = '#{client.escape(params[:turma])}'"
-  end
-
-  query += " WHERE #{conditions.join(' AND ')}" if conditions.any?
-  query += " ORDER BY nome ASC"
-
-  alunos_do_banco = client.query(query)
-  @total_alunos   = client.query("SELECT COUNT(id) AS count FROM alunos").first['count']
-
-  @alunos = alunos_do_banco.map do |aluno|
-    hoje      = Date.today
-    data_nasc = aluno['data_nascimento']
-    if data_nasc
-      idade = hoje.year - data_nasc.year
-      idade -= 1 if hoje.yday < data_nasc.yday
-      aluno['idade'] = idade
-    else
-      aluno['idade'] = 'N/A'
+    if params[:busca] && !params[:busca].empty?
+      conditions << "nome ILIKE $#{param_count}"
+      params_list << "%#{params[:busca]}%"
+      param_count += 1
     end
-    aluno
-  end
 
-  @faixas = FAIXAS
-  @turmas = TURMAS
-  erb :index
+    if params[:faixa] && !params[:faixa].empty?
+      conditions << "cor_faixa = $#{param_count}"
+      params_list << params[:faixa]
+      param_count += 1
+    end
+
+    if params[:turma] && !params[:turma].empty?
+      conditions << "turma = $#{param_count}"
+      params_list << params[:turma]
+      param_count += 1
+    end
+    
+    query += " WHERE #{conditions.join(' AND ')}" unless conditions.empty?
+    query += " ORDER BY nome ASC"
+
+    @alunos = client.exec_params(query, params_list).map do |aluno|
+      hoje = Date.today
+      data_nasc_str = aluno['data_nascimento']
+      if data_nasc_str && !data_nasc_str.empty?
+        begin
+          data_nasc_obj = Date.parse(data_nasc_str)
+          idade = hoje.year - data_nasc_obj.year
+          idade -= 1 if hoje.yday < data_nasc_obj.yday
+          aluno['idade'] = idade
+        rescue Date::Error
+          aluno['idade'] = 'Inválida'
+        end
+      else
+        aluno['idade'] = 'N/A'
+      end
+      aluno
+    end
+    
+    total_result = client.exec("SELECT COUNT(id) AS count FROM alunos")
+    @total_alunos = total_result.any? ? total_result.first['count'].to_i : 0
+    
+    @faixas = FAIXAS
+    @turmas = TURMAS
+    erb :index
+  ensure
+    client.close if client
+  end
 end
 
 # --- CRUD DE ALUNOS ---
+
 post '/alunos' do
   client = create_db_client
-  nome = client.escape(params['nome'])
-  data_nascimento = params['data_nascimento'].empty? ? "NULL" : "'#{client.escape(params['data_nascimento'])}'"
-  cor_faixa = client.escape(params['cor_faixa'])
-  turma = client.escape(params['turma'])
-  bolsista = params['bolsista'] == 'on' ? 1 : 0
+  begin
+    # Recalibra o sequence para o maior id já existente
+    client.exec <<~SQL
+      SELECT setval(
+        pg_get_serial_sequence('alunos', 'id'),
+        (SELECT COALESCE(MAX(id), 0) FROM alunos)
+      );
+    SQL
 
-  # Novos campos de anamnese
-  saude_problema = client.escape(params['saude_problema'])
-  saude_medicacao = client.escape(params['saude_medicacao'])
-  saude_lesao = client.escape(params['saude_lesao'])
-  saude_substancia = client.escape(params['saude_substancia'])
+    bolsista = params['bolsista'] == 'on'
 
-  query_aluno = "INSERT INTO alunos(nome, data_nascimento, cor_faixa, turma, bolsista, saude_problema, saude_medicacao, saude_lesao, saude_substancia) VALUES ('#{nome}', #{data_nascimento}, '#{cor_faixa}', '#{turma}', #{bolsista}, '#{saude_problema}', '#{saude_medicacao}', '#{saude_lesao}', '#{saude_substancia}')"
-  client.query(query_aluno)
-  
-  aluno_id = client.last_id
-  valor_mensalidade = bolsista == 1 ? 0.00 : 70.00
+    query = <<~SQL
+      INSERT INTO alunos(
+        nome, data_nascimento, cor_faixa, turma,
+        bolsista, saude_problema, saude_medicacao,
+        saude_lesao, saude_substancia
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING id
+    SQL
 
-  query_assinatura = "INSERT INTO assinaturas(aluno_id, plano_id, valor_mensalidade, status) VALUES (#{aluno_id}, 1, #{valor_mensalidade}, 'ativa')"
-  client.query(query_assinatura)
+    params_list = [
+      params['nome'],
+      params['data_nascimento'].empty? ? nil : params['data_nascimento'],
+      params['cor_faixa'],
+      params['turma'],
+      bolsista,
+      params['saude_problema'],
+      params['saude_medicacao'],
+      params['saude_lesao'],
+      params['saude_substancia']
+    ]
 
-  session[:mensagem_sucesso] = "Aluno cadastrado com sucesso! Assinatura ativada."
-  redirect '/' 
+    result = client.exec_params(query, params_list)
+    aluno_id = result.first['id']
+
+    valor_mensalidade = bolsista ? 0.00 : 70.00
+    client.exec_params(
+      "INSERT INTO assinaturas(aluno_id, plano_id, valor_mensalidade, status)
+       VALUES ($1, 1, $2, 'ativa')",
+      [aluno_id, valor_mensalidade]
+    )
+
+    session[:mensagem_sucesso] = "Aluno cadastrado com sucesso!"
+    redirect '/'
+  ensure
+    client.close if client
+  end
 end
+
+
 
 get '/alunos/:id/editar' do
-  client  = create_db_client
-  @aluno  = client.query("SELECT * FROM alunos WHERE id = #{params['id']}").first
-  @faixas = FAIXAS
-  @turmas = TURMAS
-  erb :editar_aluno
+  client = create_db_client
+  begin
+    @aluno = client.exec_params("SELECT * FROM alunos WHERE id = $1", [params['id']]).first
+    redirect '/' if @aluno.nil?
+
+    # Converte data_nascimento de String para Date, se existir
+    if @aluno['data_nascimento'] && !@aluno['data_nascimento'].empty?
+      @aluno['data_nascimento'] = Date.parse(@aluno['data_nascimento'])
+    end
+
+    @faixas = FAIXAS
+    @turmas = TURMAS
+    erb :editar_aluno
+  ensure
+    client.close if client
+  end
 end
+
 
 put '/alunos/:id' do
   client = create_db_client
-  id = params['id']
-  nome = client.escape(params['nome'])
-  data_nascimento = params['data_nascimento'].empty? ? "NULL" : "'#{client.escape(params['data_nascimento'])}'"
-  cor_faixa = client.escape(params['cor_faixa'])
-  turma = client.escape(params['turma'])
-  bolsista = params['bolsista'] == 'on' ? 1 : 0
+  begin
+    bolsista = params['bolsista'] == 'on'
+    
+    query = <<~SQL
+      UPDATE alunos SET
+        nome = $1,
+        data_nascimento = $2,
+        cor_faixa = $3,
+        turma = $4,
+        bolsista = $5,
+        saude_problema = $6,
+        saude_medicacao = $7,
+        saude_lesao = $8,
+        saude_substancia = $9
+      WHERE id = $10
+    SQL
+    params_list = [
+      params['nome'],
+      params['data_nascimento'].empty? ? nil : params['data_nascimento'],
+      params['cor_faixa'],
+      params['turma'],
+      bolsista,
+      params['saude_problema'],
+      params['saude_medicacao'],
+      params['saude_lesao'],
+      params['saude_substancia'],
+      params['id']
+    ]
 
-  # Novos campos de anamnese
-  saude_problema = client.escape(params['saude_problema'])
-  saude_medicacao = client.escape(params['saude_medicacao'])
-  saude_lesao = client.escape(params['saude_lesao'])
-  saude_substancia = client.escape(params['saude_substancia'])
-
-  query = "UPDATE alunos SET nome = '#{nome}', data_nascimento = #{data_nascimento}, cor_faixa = '#{cor_faixa}', turma = '#{turma}', bolsista = #{bolsista}, saude_problema = '#{saude_problema}', saude_medicacao = '#{saude_medicacao}', saude_lesao = '#{saude_lesao}', saude_substancia = '#{saude_substancia}' WHERE id = #{id}"
-  client.query(query)
-  
-  session[:mensagem_sucesso] = "Dados do aluno atualizados com sucesso!"
-  redirect "/alunos/#{id}"
+    client.exec_params(query, params_list)
+    session[:mensagem_sucesso] = "Dados do aluno atualizados com sucesso!"
+    redirect "/alunos/#{params['id']}"
+  ensure
+    client.close if client
+  end
 end
-
 
 delete '/alunos/:id' do
   client = create_db_client
-  client.query("DELETE FROM alunos WHERE id = #{params['id']}")
-  session[:mensagem_sucesso] = "Aluno removido com sucesso!"
-  redirect '/'
+  begin
+    client.exec_params("DELETE FROM alunos WHERE id = $1", [params['id']])
+    session[:mensagem_sucesso] = "Aluno removido com sucesso!"
+    redirect '/'
+  ensure
+    client.close if client
+  end
 end
 
 # --- PÁGINA DE DETALHES DO ALUNO ---
 get '/alunos/:id' do
-  client    = create_db_client
-  @aluno    = client.query("SELECT * FROM alunos WHERE id = #{params['id']}").first
-  redirect '/' if @aluno.nil?
+  client = create_db_client
+  begin
+    @aluno = client.exec_params("SELECT * FROM alunos WHERE id = $1", [params['id']]).first
+    redirect '/' if @aluno.nil?
 
-  # Mensalidades
-  @assinatura = client.query("SELECT * FROM assinaturas WHERE aluno_id = #{@aluno['id']} AND status = 'ativa'").first
-  if @assinatura
-    ultimo_pag = client.query("SELECT data_pagamento FROM pagamentos WHERE assinatura_id = #{@assinatura['id']} ORDER BY data_pagamento DESC LIMIT 1").first
-    if ultimo_pag
-      venc = ultimo_pag['data_pagamento'] + 30
-      @status_mensalidade = Date.today > venc ? "Atrasado" : "Em Dia"
-      @cor_status         = "status-#{@status_mensalidade.downcase}"
+    # Mensalidades
+    @assinatura = client.exec_params(
+      "SELECT * FROM assinaturas WHERE aluno_id = $1 AND status = 'ativa'",
+      [params['id']]
+    ).first
+
+    if @assinatura
+      ultimo_pag = client.exec_params(
+        "SELECT data_pagamento FROM pagamentos WHERE assinatura_id = $1 ORDER BY data_pagamento DESC LIMIT 1",
+        [@assinatura['id']]
+      ).first
+
+      if ultimo_pag
+        vencimento = Date.parse(ultimo_pag['data_pagamento']) + 30
+        @status_mensalidade = Date.today > vencimento ? "Atrasado" : "Em Dia"
+        @cor_status = "status-#{@status_mensalidade.downcase.split.first}"
+      else
+        @status_mensalidade = "Pendente"
+        @cor_status = "status-pendente"
+      end
+
+      @historico_pagamentos = client.exec_params(
+        "SELECT * FROM pagamentos WHERE assinatura_id = $1 ORDER BY data_pagamento DESC",
+        [@assinatura['id']]
+      )
     else
-      @status_mensalidade = "Pendente"
-      @cor_status         = "status-pendente"
+      @status_mensalidade = "Inativa"
+      @cor_status = "status-inativo"
     end
-    @historico_pagamentos = client.query("SELECT * FROM pagamentos WHERE assinatura_id = #{@assinatura['id']} ORDER BY data_pagamento DESC")
-  else
-    @status_mensalidade = "Inativa"
-    @cor_status         = "status-inativo"
+
+    # Graduações
+    @graduacoes = client.exec_params(
+      "SELECT * FROM graduacoes WHERE aluno_id = $1 ORDER BY data_graduacao DESC",
+      [params['id']]
+    )
+    
+    # Presença
+    total_aulas_result = client.exec("SELECT COUNT(id) as count FROM aulas")
+    @total_aulas = total_aulas_result.first['count'].to_i
+    presencas_result = client.exec_params(
+      "SELECT COUNT(id) as count FROM presencas WHERE aluno_id = $1 AND presente = TRUE",
+      [params['id']]
+    )
+    @presencas = presencas_result.first['count'].to_i
+    @faltas = @total_aulas - @presencas
+
+    erb :'alunos/show'
+  ensure
+    client.close if client
   end
-
-  # Graduações
-  @graduacoes = client.query("SELECT * FROM graduacoes WHERE aluno_id = #{@aluno['id']} ORDER BY data_graduacao DESC")
-
-  # Presença
-  @total_aulas = client.query("SELECT COUNT(id) AS count FROM aulas").first['count']
-  @presencas   = client.query("SELECT COUNT(id) AS count FROM presencas WHERE aluno_id = #{@aluno['id']} AND presente = TRUE").first['count']
-  @faltas      = @total_aulas - @presencas
-
-  erb :'alunos/show'
 end
 
 # --- ROTAS DE AULAS E PRESENÇA ---
 get '/aulas' do
   client = create_db_client
-  @aulas = client.query("SELECT * FROM aulas ORDER BY data_aula DESC")
-  erb :'aulas/index'
+  begin
+    @aulas  = client.exec("SELECT * FROM aulas ORDER BY data_aula DESC")
+    @turmas = TURMAS
+    erb :'aulas/index'
+  ensure
+    client.close if client
+  end
 end
 
 post '/aulas' do
-  client     = create_db_client
-  data_aula  = client.escape(params['data_aula'])
-  descricao  = client.escape(params['descricao'])
-  turma_sel  = params['turma']
-  todas      = params['todas_turmas'] == 'on'
+  client = create_db_client
+  begin
+    turma_aula = params['turma'].empty? ? nil : params['turma']
+    todas_turmas = params['todas_turmas'] == 'on'
 
-  # Cria a aula
-  client.query("INSERT INTO aulas (data_aula, descricao) VALUES ('#{data_aula}', '#{descricao}')")
-  aula_id = client.last_id
+    result = client.exec_params(
+      "INSERT INTO aulas (data_aula, turma, descricao) VALUES ($1, $2, $3) RETURNING id",
+      [params['data_aula'], turma_aula, params['descricao']]
+    )
+    aula_id = result.first['id']
 
-  # Decide quais alunos incluir na lista de presença:
-  if todas
-    alunos_ids = client.query("SELECT id FROM alunos").map { |a| a['id'] }
-  elsif turma_sel && !turma_sel.empty?
-    safe_turma = client.escape(turma_sel)
-    alunos_ids = client.query("SELECT id FROM alunos WHERE turma = '#{safe_turma}'").map { |a| a['id'] }
-  else
-    alunos_ids = client.query("SELECT id FROM alunos").map { |a| a['id'] }
-  end
-
-  # Inicializa presença FALSE
-  alunos_ids.each do |aluno_id|
-    client.query("INSERT INTO presencas (aula_id, aluno_id, presente) VALUES (#{aula_id}, #{aluno_id}, FALSE)")
-  end
-
-  session[:mensagem_sucesso] =
-    if todas
-      "Aula criada para **todos** os alunos! Agora registre a presença."
+    # decide alunos
+    if todas_turmas
+      alunos_q = client.exec("SELECT id FROM alunos")
+    elsif turma_aula
+      alunos_q = client.exec_params("SELECT id FROM alunos WHERE turma = $1", [turma_aula])
     else
-      "Aula criada para a turma “#{turma_sel}”! Agora registre a presença."
+      alunos_q = client.exec("SELECT id FROM alunos")
     end
 
-  redirect "/aulas/#{aula_id}"
+    alunos_q.each do |a|
+      client.exec_params(
+        "INSERT INTO presencas (aula_id, aluno_id, presente) VALUES ($1, $2, FALSE) ON CONFLICT (aluno_id, aula_id) DO NOTHING",
+        [aula_id, a['id']]
+      )
+    end
+
+    session[:mensagem_sucesso] = "Aula criada com sucesso!"
+    redirect "/aulas/#{aula_id}"
+  ensure
+    client.close if client
+  end
 end
 
 get '/aulas/:id' do
-  client          = create_db_client
-  @aula           = client.query("SELECT * FROM aulas WHERE id = #{params['id']}").first
-  redirect '/aulas' if @aula.nil?
-  @lista_presenca = client.query(
-    "SELECT p.id, a.nome, p.presente FROM presencas p JOIN alunos a ON p.aluno_id = a.id WHERE p.aula_id = #{params['id']} ORDER BY a.nome"
-  )
-  erb :'aulas/show'
+  client = create_db_client
+  begin
+    @aula = client.exec_params("SELECT * FROM aulas WHERE id = $1", [params['id']]).first
+    redirect '/aulas' if @aula.nil?
+    @lista_presenca = client.exec_params(
+      "SELECT p.aluno_id AS id, a.nome, p.presente FROM presencas p JOIN alunos a ON p.aluno_id = a.id WHERE p.aula_id = $1 ORDER BY a.nome",
+      [params['id']]
+    )
+    erb :'aulas/show'
+  ensure
+    client.close if client
+  end
 end
 
 post '/aulas/:id/presencas' do
-  client  = create_db_client
-  aula_id = params['id'].to_i
+  client = create_db_client
+  begin
+    aula_id = params['id']
+    client.exec_params("UPDATE presencas SET presente = FALSE WHERE aula_id = $1", [aula_id])
 
-  client.query("UPDATE presencas SET presente = FALSE WHERE aula_id = #{aula_id}")
-  Array(params['presentes']).each do |pid|
-    client.query("UPDATE presencas SET presente = TRUE WHERE id = #{pid.to_i}")
+    (params['presentes'] || []).each do |aluno_id|
+      client.exec_params(
+        "UPDATE presencas SET presente = TRUE WHERE aula_id = $1 AND aluno_id = $2",
+        [aula_id, aluno_id]
+      )
+    end
+
+    session[:mensagem_sucesso] = "Lista de presença atualizada!"
+    redirect "/aulas/#{aula_id}"
+  ensure
+    client.close if client
   end
-
-  session[:mensagem_sucesso] = "Lista de presença atualizada!"
-  redirect "/aulas/#{aula_id}"
 end
 
 # --- ROTAS DE PAGAMENTOS E GRADUAÇÕES ---
 post '/pagamentos' do
   client = create_db_client
-  assinatura_id = params['assinatura_id']
-  aluno_id = params['aluno_id']
-  valor_pago = client.escape(params['valor_pago'])
-  data_pagamento = client.escape(params['data_pagamento'])
-  
-  query = "INSERT INTO pagamentos(assinatura_id, valor_pago, data_pagamento) VALUES (#{assinatura_id}, '#{valor_pago}', '#{data_pagamento}')"
-  client.query(query)
-  
-  session[:mensagem_sucesso] = "Pagamento registrado com sucesso!"
-  redirect "/alunos/#{aluno_id}"
+  begin
+    client.exec_params(
+      "INSERT INTO pagamentos(assinatura_id, valor_pago, data_pagamento) VALUES ($1, $2, $3)",
+      [params['assinatura_id'], params['valor_pago'], params['data_pagamento']]
+    )
+    session[:mensagem_sucesso] = "Pagamento registrado com sucesso!"
+    redirect "/alunos/#{params['aluno_id']}"
+  ensure
+    client.close if client
+  end
 end
 
 post '/graduacoes' do
   client = create_db_client
-  aluno_id = params['aluno_id']
-  faixa = client.escape(params['faixa'])
-  data_graduacao = client.escape(params['data_graduacao'])
-
-  insert_query = "INSERT INTO graduacoes(aluno_id, faixa, data_graduacao) VALUES (#{aluno_id}, '#{faixa}', '#{data_graduacao}')"
-  client.query(insert_query)
-
-  update_query = "UPDATE alunos SET cor_faixa = '#{faixa}' WHERE id = #{aluno_id}"
-  client.query(update_query)
-  
-  session[:mensagem_sucesso] = "Graduação registrada com sucesso!"
-  redirect "/alunos/#{aluno_id}"
+  begin
+    client.exec_params(
+      "INSERT INTO graduacoes(aluno_id, faixa, data_graduacao) VALUES ($1, $2, $3)",
+      [params['aluno_id'], params['faixa'], params['data_graduacao']]
+    )
+    client.exec_params(
+      "UPDATE alunos SET cor_faixa = $1 WHERE id = $2",
+      [params['faixa'], params['aluno_id']]
+    )
+    session[:mensagem_sucesso] = "Graduação registrada com sucesso!"
+    redirect "/alunos/#{params['aluno_id']}"
+  ensure
+    client.close if client
+  end
 end

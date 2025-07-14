@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: academia-jiujitsu
+    env: ruby
+    buildCommand: "./bin/render-build.sh"
+    startCommand: "bundle exec puma -C config/puma.rb"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: academia-db
+          property: connectionString
+      - key: RACK_ENV
+        value: production
+      - key: RAILS_MASTER_KEY
+        sync: false
+
+databases:
+  - name: academia-db
+    databaseName: academia_jiujitsu_prod
+    user: jiujitsu_user
+    plan: free

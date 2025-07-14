@@ -1,51 +1,57 @@
 <header>
-    <h1>Editar Aluno: <%= @aluno['nome'] %></h1>
+  <h1>Editar Aluno: <%= @aluno['nome'] %></h1>
+  <a href="/" class="btn-voltar">Voltar para a Lista</a>
 </header>
 
-<section class="form-section">
-    <form action="/alunos/<%= @aluno['id'] %>" method="POST">
-      <input type="hidden" name="_method" value="PUT">
+<section class="card form-section">
+  <h2>Dados do Aluno</h2>
+  <form action="/alunos/<%= @aluno['id'] %>" method="POST">
+    <input type="hidden" name="_method" value="PUT">
 
-      <label for="nome">Nome Completo:</label>
-      <input type="text" id="nome" name="nome" value="<%= @aluno['nome'] %>" required>
-      
-      <label for="cor_faixa">Faixa:</label>
-      <select name="cor_faixa" id="cor_faixa">
-        <% @faixas.each do |faixa| %>
-          <option value="<%= faixa %>" <%= 'selected' if @aluno['cor_faixa'] == faixa %>><%= faixa %></option>
-        <% end %>
-      </select>
+    <label for="nome">Nome:</label>
+    <input type="text" id="nome" name="nome" value="<%= @aluno['nome'] %>" required>
 
-      <label for="data_nascimento">Data de Nascimento:</label>
-      <input type="date" id="data_nascimento" name="data_nascimento" value="<%= @aluno['data_nascimento'].strftime('%Y-%m-%d') %>">
+    <label for="cor_faixa">Cor da Faixa:</label>
+    <select name="cor_faixa" id="cor_faixa">
+      <% @faixas.each do |faixa| %>
+        <option value="<%= faixa %>" <%= 'selected' if @aluno['cor_faixa'] == faixa %>>
+          <%= faixa %>
+        </option>
+      <% end %>
+    </select>
 
-      <label for="turma">Turma:</label>
-      <select name="turma" id="turma">
-        <% @turmas.each do |turma| %>
-          <option value="<%= turma %>" <%= 'selected' if @aluno['turma'] == turma %>><%= turma %></option>
-        <% end %>
-      </select>
+    <label for="data_nascimento">Data de Nascimento:</label>
+    <input type="date"
+           id="data_nascimento"
+           name="data_nascimento"
+           value="<%= @aluno['data_nascimento'] ? @aluno['data_nascimento'].strftime('%Y-%m-%d') : '' %>">
 
-      <div class="checkbox-container">
-        <input type="checkbox" id="bolsista" name="bolsista" <%= 'checked' if @aluno['bolsista'] == 1 %>>
-        <label for="bolsista">Este aluno é bolsista?</label>
-      </div>
+    <label for="turma">Turma:</label>
+    <select name="turma" id="turma">
+      <% @turmas.each do |turma| %>
+        <option value="<%= turma %>" <%= 'selected' if @aluno['turma'] == turma %>>
+          <%= turma %>
+        </option>
+      <% end %>
+    </select>
 
-      <h3 class="form-title">Anamnese</h3>
+    <div class="checkbox-container">
+      <input type="checkbox" id="bolsista" name="bolsista" <%= 'checked' if @aluno['bolsista'] == 't' || @aluno['bolsista'] == true %>>
+      <label for="bolsista">Bolsista?</label>
+    </div>
 
-      <label for="saude_problema">Tem algum problema de saúde?</label>
-      <textarea id="saude_problema" name="saude_problema" rows="3"><%= @aluno['saude_problema'] %></textarea>
-      
-      <label for="saude_medicacao">Toma alguma medicação?</label>
-      <textarea id="saude_medicacao" name="saude_medicacao" rows="3"><%= @aluno['saude_medicacao'] %></textarea>
-      
-      <label for="saude_lesao">Já teve alguma lesão?</label>
-      <textarea id="saude_lesao" name="saude_lesao" rows="3"><%= @aluno['saude_lesao'] %></textarea>
-      
-      <label for="saude_substancia">Faz ou já fez uso de alguma substância?</label>
-      <textarea id="saude_substancia" name="saude_substancia" rows="3"><%= @aluno['saude_substancia'] %></textarea>
+    <label for="saude_problema">Problema de Saúde:</label>
+    <input type="text" id="saude_problema" name="saude_problema" value="<%= @aluno['saude_problema'] %>">
 
-      <button type="submit">Salvar Alterações</button>
-      <a href="/alunos/<%= @aluno['id'] %>" class="btn-cancelar">Cancelar</a>
-    </form>
+    <label for="saude_medicacao">Uso de Medicação:</label>
+    <input type="text" id="saude_medicacao" name="saude_medicacao" value="<%= @aluno['saude_medicacao'] %>">
+
+    <label for="saude_lesao">Histórico de Lesões:</label>
+    <input type="text" id="saude_lesao" name="saude_lesao" value="<%= @aluno['saude_lesao'] %>">
+
+    <label for="saude_substancia">Uso de Substâncias:</label>
+    <input type="text" id="saude_substancia" name="saude_substancia" value="<%= @aluno['saude_substancia'] %>">
+
+    <button type="submit" class="btn-salvar">Salvar Alterações</button>
+  </form>
 </section>

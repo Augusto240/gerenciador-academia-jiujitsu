@@ -1,16 +1,24 @@
+# Dockerfile
+
 FROM ruby:3.2.3
 WORKDIR /usr/src/app
+
+# ---- INÍCIO DA CORREÇÃO ----
+# Instala as dependências do sistema necessárias para a gem 'pg' ANTES do bundle install
+RUN apt-get update -qq && apt-get install -y libpq-dev build-essential
+# ---- FIM DA CORREÇÃO ----
 
 COPY Gemfile Gemfile.lock ./
 RUN bundle install
 
-COPY wait-for-it.sh docker-entrypoint.sh ./
-RUN chmod +x wait-for-it.sh docker-entrypoint.sh
-
 COPY . .
+
+# Garante que os scripts são executáveis
+RUN chmod +x wait-for-it.sh docker-entrypoint.sh
 
 EXPOSE 4567
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
 
-CMD ["./wait-for-it.sh", "db:3306", "--timeout=60", "--strict", "--", "bundle", "exec", "ruby", "app.rb", "-o", "0.0.0.0"]
+# Espera pela porta 5432 do PostgreSQL
+CMD ["bundle", "exec", "ruby", "app.rb", "-o", "0.0.0.0"]

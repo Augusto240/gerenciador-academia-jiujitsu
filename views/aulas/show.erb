@@ -1,7 +1,8 @@
 <header>
   <h1>Lista de Presença</h1>
-  <h2>Aula de: <%= @aula['data_aula'].strftime('%d/%m/%Y') %></h2>
-  <p><%= @aula['descricao'] %></p>
+  <% da = @aula['data_aula'].is_a?(String) ? Date.parse(@aula['data_aula']) : @aula['data_aula'] %>
+  <h2>Aula de: <%= da.strftime('%d/%m/%Y') %></h2>
+  <p><%= h @aula['descricao'] %></p>
   <a href="/aulas" class="btn-voltar">Voltar para Todas as Aulas</a>
 </header>
 
@@ -21,9 +22,9 @@
               <input type="checkbox"
                      name="presentes[]"
                      value="<%= aluno['id'] %>"
-                     <%= 'checked' if aluno['presente'] == 1 %>>
+                     <%= 'checked' if aluno['presente'] %>>
             </td>
-            <td><%= aluno['nome'] %></td>
+            <td><%= h aluno['nome'] %></td>
           </tr>
         <% end %>
       </tbody>

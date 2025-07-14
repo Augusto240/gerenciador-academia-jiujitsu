@@ -1,10 +1,10 @@
 #!/bin/sh
 set -e
 
-# Se DATABASE_HOST estiver definido, espera conexão antes de iniciar
+# Espera pela porta correta do PostgreSQL
 if [ -n "$DATABASE_HOST" ]; then
-  ./wait-for-it.sh "$DATABASE_HOST:3306" --timeout=60 --strict
+  ./wait-for-it.sh "$DATABASE_HOST:5432" --timeout=60 --strict
 fi
 
-# Executa comando padrão
+# Executa o comando principal passado pelo CMD do Dockerfile
 exec "$@"
