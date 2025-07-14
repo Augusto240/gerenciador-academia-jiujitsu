@@ -3,7 +3,7 @@
 ![Ruby](https://img.shields.io/badge/Ruby-CC342D?style=for-the-badge&logo=ruby&logoColor=white)
 ![Sinatra](https://img.shields.io/badge/Sinatra-000000?style=for-the-badge&logo=sinatra&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
 
 Uma aplicação web completa para gestão de academias de jiu-jitsu, desenvolvida para ser uma ferramenta robusta e fácil de usar. O projeto é totalmente containerizado com Docker para garantir um ambiente de desenvolvimento e implantação consistente e portátil.
 
@@ -22,13 +22,20 @@ Este projeto nasceu de uma necessidade real: substituir a planilha manual do meu
 * ✅ **Interface Moderna e Profissional:** UI completamente redesenhada com uma paleta de cores sóbria, tipografia clara e componentes consistentes.
 * ✅ **Ambiente Containerizado:** 100% configurado com Docker e Docker Compose para portabilidade e facilidade de execução.
 * ✅ **Segurança de Dados:** Separação da estrutura (`schema.sql`) e dos dados (`data.sql`), com os dados sensíveis dos alunos sendo ignorados pelo Git para garantir a privacidade.
+* ✅ **Padrão Presenter:** Implementado para separar a lógica de apresentação dos modelos de dados.
+* ✅ **Service Objects:** Adicionados para encapsular operações de negócio complexas.
+* ✅ **Paginação:** Implementada para melhorar a performance com grande volume de dados.
+* ✅ **Pool de Conexões:** Sistema otimizado para gerenciamento eficiente de conexões com o banco de dados.
+* ✅ **Validações Avançadas:** Sistema robusto de validação para todos os tipos de dados.
+* ✅ **Proteção contra XSS:** Escapamento HTML consistente em toda a aplicação.
 
 ## Tecnologias Utilizadas
 
 * **Backend:** Ruby 3.2.3 com o micro-framework Sinatra
-* **Banco de Dados:** MariaDB 10.11
+* **Banco de Dados:** PostgreSQL 14
 * **Frontend:** HTML5, CSS3, ERB (Embedded Ruby)
 * **Ambiente e Orquestração:** Docker & Docker Compose
+* **Segurança:** BCrypt para senhas, Prepared Statements para prevenção de SQL Injection
 
 ## Como Rodar o Projeto
 
@@ -43,26 +50,28 @@ Graças ao Docker, iniciar todo o ambiente (aplicação + banco de dados) requer
 
 1.  **Clone o repositório para sua máquina local:**
     ```bash
-    git clone [https://github.com/Augusto240/gerenciador-academia-jiujitsu.git](https://github.com/Augusto240/gerenciador-academia-jiujitsu.git)
+    git clone https://github.com/Augusto240/gerenciador-academia-jiujitsu.git
     ```
 
 2.  **Acesse a pasta do projeto:**
     ```bash
     cd gerenciador-academia-jiujitsu
     ```
-3.  **(Apenas na primeira vez em uma máquina nova)** Crie um arquivo de dados vazio para o Docker. Como os dados dos alunos são privados e não vão para o GitHub, este passo é necessário para que o ambiente inicie corretamente.
-    ```bash
-    touch initdb/20_data.sql
-    ```
 
-4.  **Construa e inicie os contêineres:**
+3.  **Construa e inicie os contêineres:**
     ```bash
     docker compose up --build
     ```
     Este único comando irá baixar as imagens necessárias, construir o ambiente do aplicativo, iniciar o banco de dados com a estrutura correta e conectar tudo.
 
-5.  **Acesse a aplicação:**
+4.  **Acesse a aplicação:**
     Abra seu navegador e vá para o endereço: **[http://localhost:4567](http://localhost:4567)**
+
+5.  **Credenciais padrão para login:**
+    ```
+    Email: admin@jpteam.com
+    Senha: admin123
+    ```
 
 Para parar todo o ambiente, basta voltar ao terminal e pressionar `Ctrl` + `C`.
 
@@ -70,25 +79,32 @@ Para parar todo o ambiente, basta voltar ao terminal e pressionar `Ctrl` + `C`.
 
 ```
 /
-|-- app.rb                  # O coração da aplicação Sinatra, com todas as rotas e lógica.
+|-- app.rb                  # O coração da aplicação Sinatra, com todas as rotas, lógica e padrões de design.
 |-- Dockerfile              # A "receita" para construir a imagem Docker do aplicativo Ruby.
 |-- docker-compose.yml      # O "maestro" que orquestra os contêineres do app e do banco.
 |-- /initdb/                # Pasta com os scripts de inicialização do banco de dados.
-|   |-- 10_schema.sql       # Cria a estrutura de todas as tabelas. (Público)
-|   |-- 20_data.sql         # Insere os dados dos alunos. (Privado, ignorado pelo Git)
+|   |-- 10_schema.sql       # Cria a estrutura de todas as tabelas.
 |-- Gemfile / Gemfile.lock  # Define as dependências (gems) do projeto.
 |-- /public/                # Pasta para arquivos estáticos (CSS, imagens).
 |-- /views/                 # Pasta para os templates de HTML com Ruby embutido (ERB).
 |-- README.md               # Este arquivo de documentação.
 ```
 
+## Padrões de Design Implementados
+
+* **MVC (Model-View-Controller):** Separação clara entre a camada de dados, a lógica de negócio e a interface do usuário.
+* **Presenter Pattern:** Separa a lógica de apresentação dos modelos de dados, tornando as views mais limpas e reutilizáveis.
+* **Service Objects:** Encapsula operações complexas de negócio em classes dedicadas e reutilizáveis.
+* **Connection Pool:** Gerencia eficientemente as conexões com o banco de dados para melhor performance.
+
 ## Roadmap de Melhorias
 
 * **Melhorias Técnicas:**
-    * [ ] Adicionar um **Sistema de Login (Autenticação)** para proteger o acesso.
+    * [ ] Implementar sistema de notificações para mensalidades próximas do vencimento.
+    * [ ] Adicionar relatórios estatísticos e gráficos de presença/evolução dos alunos.
+    * [ ] Desenvolver um aplicativo móvel para complementar o sistema web.
+    * [ ] Implementar funcionalidades de backup automático para os dados.
     * [ ] Escrever testes automatizados para a aplicação.
-    * [ ] Implementar paginação na lista de alunos para melhor performance com muitos registros.
-    * [ ] Refatorar o código para uma arquitetura mais orientada a objetos (ex: Models).
 
 ---
 
@@ -96,6 +112,6 @@ Para parar todo o ambiente, basta voltar ao terminal e pressionar `Ctrl` + `C`.
 
 **Augusto Oliveira**
 
-* GitHub: `https://github.com/Augusto240`
-* LinkedIn: `https://www.linkedin.com/in/augusto-oliveira-4a8068235/`
-* Portfólio: `https://augusto240.github.io/Personal-Site/`
+* GitHub: [https://github.com/Augusto240](https://github.com/Augusto240)
+* LinkedIn: [https://www.linkedin.com/in/augusto-oliveira-4a8068235/](https://www.linkedin.com/in/augusto-oliveira-4a8068235/)
+* Portfólio: [https://augusto240.github.io/Personal-Site/](https://augusto240.github.io/Personal-Site/)
