@@ -2,23 +2,13 @@ require 'sinatra'
 require 'pg'
 require 'bcrypt'
 require 'date'
-<<<<<<< HEAD
-require 'bigdecimal'
-
-# DEBUG: Imprimir variáveis de ambiente para verificar se estão sendo carregadas
-puts "=> DATABASE_HOST: #{ENV['DATABASE_HOST']}"
-puts "=> DATABASE_USER: #{ENV['DATABASE_USER']}"
-puts "=> DATABASE_NAME: #{ENV['DATABASE_NAME']}"
-puts "=> Conectando ao banco de dados..."
-=======
 require 'connection_pool'
 require 'logger'
->>>>>>> feature/postgresql
+require 'bigdecimal'  # Mantendo esta gem também
 
 use Rack::MethodOverride
 enable :sessions
 set :session_secret, ENV.fetch('SESSION_SECRET') { "uma_chave_super_secreta_e_aleatoria_para_desenvolvimento" }
-
 # ========================================
 # CONSTANTES E CONFIGURAÇÃO
 # ========================================
@@ -1175,4 +1165,22 @@ post '/graduacoes' do
     session[:mensagem_erro] = "Erro ao registrar graduação. Verifique os dados e tente novamente."
     redirect "/alunos/#{params['aluno_id']}"
   end
+end
+
+# Adicionar rota para dashboard em app.rb
+get '/dashboard' do
+  # Estatísticas básicas
+  @total_alunos = Aluno.total
+  @alunos_ativos = Aluno.buscar_com_filtros.count
+  @total_aulas_mes = Aula.total_no_mes_atual
+  @total_presencas_mes = Presenca.total_no_mes_atual
+  
+  # Alunos com aniversário no mês
+  @aniversariantes = Aluno.aniversariantes_do_mes
+  
+  # Mensalidades
+  @mensalidades_atrasadas = Assinatura.contar_por_status("Atrasado")
+  @mensalidades_em_dia = Assinatura.contar_por_status("Em Dia")
+  
+  erb :dashboard
 end
