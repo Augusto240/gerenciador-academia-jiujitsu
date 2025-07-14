@@ -1,20 +1,15 @@
-# app.rb (VERSÃO DE DEPURAÇÃO)
-
 require 'sinatra'
 require 'pg'
 require 'bcrypt'
 require 'date'
 
-# --- CONFIGURAÇÃO DA APLICAÇÃO ---
 use Rack::MethodOverride
 enable :sessions
 set :session_secret, ENV.fetch('SESSION_SECRET') { "uma_chave_super_secreta_e_aleatoria_para_desenvolvimento" }
 
-# --- CONSTANTES ---
 FAIXAS = ['Branca', 'Cinza/Branca', 'Cinza', 'Cinza/Preta', 'Amarela/Branca', 'Amarela', 'Amarela/Preta', 'Laranja/Branca', 'Laranja', 'Laranja/Preta', 'Verde/Branca', 'Verde', 'Verde/Preta', 'Azul', 'Roxa', 'Marrom', 'Preta']
 TURMAS = ['Kids 2 a 3 anos', 'Kids', 'Adolescentes/Juvenil', 'Adultos', 'Feminino', 'Master/Sênior']
 
-# --- CONEXÃO COM O BANCO ---
 def create_db_client
   if ENV['DATABASE_URL']
     PG.connect(ENV['DATABASE_URL'])
@@ -23,7 +18,6 @@ def create_db_client
   end
 end
 
-# --- HELPERS E AUTENTICAÇÃO ---
 helpers do
   def logged_in?
     !!session[:user_id]
@@ -37,24 +31,18 @@ helpers do
     client.close if client
   end
 
-  # ESCAPA HTML para evitar XSS nas views
   def h(text)
     Rack::Utils.escape_html(text.to_s)
   end
 end
 
-# --- FILTRO DE AUTENTICAÇÃO ---
 before do
   pass if ['/login', '/style.css', '/logo.png'].include? request.path_info
   redirect to('/login') unless logged_in?
 end
 
-# --- ROTAS DE AUTENTICAÇÃO ---
 get('/login') { erb :'auth/login', layout: false }
 
-# ================================================================
-# ========= INÍCIO DA ROTA DE LOGIN COM DEPURAÇÃO ================
-# ================================================================
 post '/login' do
   client = create_db_client
   begin
@@ -101,9 +89,6 @@ post '/login' do
     client.close if client
   end
 end
-# ================================================================
-# ========= FIM DA ROTA DE LOGIN COM DEPURAÇÃO ===================
-# ================================================================
 
 get('/logout') do
   session.clear
@@ -111,9 +96,6 @@ get('/logout') do
   redirect to('/login')
 end
 
-# --- ROTAS PRINCIPAIS DA APLICAÇÃO ---
-
-# ROTA PRINCIPAL
 get '/' do
   client = create_db_client
   begin
@@ -172,12 +154,9 @@ get '/' do
   end
 end
 
-# --- CRUD DE ALUNOS ---
-
 post '/alunos' do
   client = create_db_client
   begin
-    # Recalibra o sequence para o maior id já existente
     client.exec <<~SQL
       SELECT setval(
         pg_get_serial_sequence('alunos', 'id'),
@@ -225,15 +204,12 @@ post '/alunos' do
   end
 end
 
-
-
 get '/alunos/:id/editar' do
   client = create_db_client
   begin
     @aluno = client.exec_params("SELECT * FROM alunos WHERE id = $1", [params['id']]).first
     redirect '/' if @aluno.nil?
 
-    # Converte data_nascimento de String para Date, se existir
     if @aluno['data_nascimento'] && !@aluno['data_nascimento'].empty?
       @aluno['data_nascimento'] = Date.parse(@aluno['data_nascimento'])
     end
@@ -297,14 +273,12 @@ delete '/alunos/:id' do
   end
 end
 
-# --- PÁGINA DE DETALHES DO ALUNO ---
 get '/alunos/:id' do
   client = create_db_client
   begin
     @aluno = client.exec_params("SELECT * FROM alunos WHERE id = $1", [params['id']]).first
     redirect '/' if @aluno.nil?
 
-    # Mensalidades
     @assinatura = client.exec_params(
       "SELECT * FROM assinaturas WHERE aluno_id = $1 AND status = 'ativa'",
       [params['id']]
@@ -334,13 +308,11 @@ get '/alunos/:id' do
       @cor_status = "status-inativo"
     end
 
-    # Graduações
     @graduacoes = client.exec_params(
       "SELECT * FROM graduacoes WHERE aluno_id = $1 ORDER BY data_graduacao DESC",
       [params['id']]
     )
-    
-    # Presença
+
     total_aulas_result = client.exec("SELECT COUNT(id) as count FROM aulas")
     @total_aulas = total_aulas_result.first['count'].to_i
     presencas_result = client.exec_params(
@@ -356,7 +328,6 @@ get '/alunos/:id' do
   end
 end
 
-# --- ROTAS DE AULAS E PRESENÇA ---
 get '/aulas' do
   client = create_db_client
   begin
@@ -380,7 +351,6 @@ post '/aulas' do
     )
     aula_id = result.first['id']
 
-    # decide alunos
     if todas_turmas
       alunos_q = client.exec("SELECT id FROM alunos")
     elsif turma_aula
@@ -438,7 +408,6 @@ post '/aulas/:id/presencas' do
   end
 end
 
-# --- ROTAS DE PAGAMENTOS E GRADUAÇÕES ---
 post '/pagamentos' do
   client = create_db_client
   begin
