@@ -5,10 +5,13 @@ require 'date'
 require 'connection_pool'
 require 'logger'
 require 'bigdecimal'  # Mantendo esta gem também
+require 'rackup'
+require 'puma'
 
 use Rack::MethodOverride
 enable :sessions
-set :session_secret, ENV.fetch('SESSION_SECRET') { "uma_chave_super_secreta_e_aleatoria_para_desenvolvimento" }
+set :session_secret, ENV.fetch('SESSION_SECRET') { "uma_chave_super_secreta_e_aleatoria_para_desenvolvimento_muito_muito_longa_e_segura_12345678901234" }
+
 # ========================================
 # CONSTANTES E CONFIGURAÇÃO
 # ========================================
@@ -17,34 +20,6 @@ FAIXAS = ['Branca', 'Cinza/Branca', 'Cinza', 'Cinza/Preta', 'Amarela/Branca', 'A
 TURMAS = ['Kids 2 a 3 anos', 'Kids', 'Adolescentes/Juvenil', 'Adultos', 'Feminino', 'Master/Sênior']
 DB_POOL_SIZE = ENV.fetch('DB_POOL_SIZE', 10).to_i
 
-<<<<<<< HEAD
-# --- CONEXÃO COM O BANCO ---
-def create_db_client
-  Mysql2::Client.new(
-    host:     ENV['DATABASE_HOST'],
-    username: ENV['DATABASE_USER'],
-    password: ENV['DATABASE_PASSWORD'],
-    database: ENV['DATABASE_NAME']
-  )
-  puts "=> Conexão com o banco de dados bem-sucedida!"
-rescue => e
-  puts "!!!!!!!!!! FALHA AO CONECTAR AO BANCO: #{e.message}"
-end
-# --- ROTA PRINCIPAL (COM BUSCA E FILTROS) ---
-get '/' do
-  client = create_db_client
-  query      = "SELECT id, nome, data_nascimento, cor_faixa, turma, bolsista FROM alunos"
-  conditions = []
-
-  if params[:busca] && !params[:busca].empty?
-    conditions << "nome LIKE '%#{client.escape(params[:busca])}%'"
-  end
-  if params[:faixa] && !params[:faixa].empty?
-    conditions << "cor_faixa = '#{client.escape(params[:faixa])}'"
-  end
-  if params[:turma] && !params[:turma].empty?
-    conditions << "turma = '#{client.escape(params[:turma])}'"
-=======
 # Configuração de ambiente
 configure do
   # Diretório de logs
@@ -79,7 +54,6 @@ DB_POOL = ConnectionPool.new(size: DB_POOL_SIZE, timeout: 5) do
       keepalives_interval: 10,
       keepalives_count: 3
     }
->>>>>>> feature/postgresql
   end
   
   PG.connect(connection_params)
@@ -91,7 +65,8 @@ def with_db
     begin
       yield conn
     rescue PG::Error => e
-      logger.error "Erro de banco de dados: #{e.message}"
+      # Usar STDERR diretamente em vez de tentar acessar settings.logger
+      STDERR.puts "Erro de banco de dados: #{e.message}"
       raise
     end
   end
@@ -100,6 +75,28 @@ end
 # ========================================
 # APRESENTAÇÃO (PRESENTERS)
 # ========================================
+
+# Extensões para a classe Date (já que não temos ActiveSupport)
+class Date
+  def self.beginning_of_month(date = Date.today)
+    Date.new(date.year, date.month, 1)
+  end
+  
+  def self.end_of_month(date = Date.today)
+    # Calcula o último dia do mês (próximo mês, dia 1, -1 dia)
+    next_month = date.month == 12 ? Date.new(date.year + 1, 1, 1) : Date.new(date.year, date.month + 1, 1)
+    next_month - 1
+  end
+  
+  def beginning_of_month
+    Date.beginning_of_month(self)
+  end
+  
+  def end_of_month
+    Date.end_of_month(self)
+  end
+end
+
 
 # BasePresenter - Base para os outros presenters
 class BasePresenter
@@ -687,7 +684,72 @@ class Aluno
       }
     end
   end
-end
+
+  def self.aniversariantes_do_mes
+  mes_atual = Date.today.month
+  with_db do |client|
+    client.exec_params(
+      "SELECT id, nome, data_nascimento FROM alunos 
+       WHERE EXTRACT(MONTH FROM data_nascimento) = $1
+       ORDER BY EXTRACT(DAY FROM data_nascimento)",
+      [mes_atual]
+    ).to_a
+    end
+  end
+
+def self.relatorio_frequencia(inicio_periodo = nil, fim_periodo = nil)
+  inicio_periodo ||= Date.today.beginning_of_month
+  fim_periodo ||= Date.today
+  
+  with_db do |client|
+    # Buscar todos os alunos ativos
+    alunos = client.exec("SELECT id, nome FROM alunos ORDER BY nome").to_a
+    
+    # Buscar aulas no período
+    aulas = client.exec_params(
+      "SELECT id, data_aula FROM aulas WHERE data_aula BETWEEN $1 AND $2 ORDER BY data_aula",
+      [inicio_periodo.to_s, fim_periodo.to_s]
+    ).to_a
+    
+    # Para cada aluno, verificar a presença em cada aula
+    resultados = []
+    
+    alunos.each do |aluno|
+      presencas = 0
+      faltas = 0
+      
+      aulas.each do |aula|
+        presente = client.exec_params(
+          "SELECT presente FROM presencas WHERE aluno_id = $1 AND aula_id = $2",
+          [aluno['id'], aula['id']]
+        ).first
+        
+        if presente && presente['presente'] == 't'
+          presencas += 1
+        else
+          faltas += 1
+        end
+      end
+      
+      # Calcular a taxa de frequência
+      taxa_frequencia = aulas.empty? ? 0 : (presencas.to_f / aulas.size * 100).round(2)
+      
+      resultados << {
+        aluno_id: aluno['id'],
+        nome: aluno['nome'],
+        presencas: presencas,
+        faltas: faltas,
+        total_aulas: aulas.size,
+        taxa_frequencia: taxa_frequencia
+      }
+    end
+
+      resultados
+    end
+  end
+end 
+
+
 
 # Classe Aula
 class Aula
@@ -720,8 +782,74 @@ class Aula
   def self.atualizar_presencas(aula_id, presentes = [])
     AulaService.atualizar_presencas(aula_id, presentes)[:success]
   end
+  def self.total_no_mes_atual
+  inicio_mes = Date.today.beginning_of_month.to_s
+  fim_mes = Date.today.end_of_month.to_s
+  
+  with_db do |client|
+    client.exec_params(
+      "SELECT COUNT(*) as total FROM aulas
+       WHERE data_aula BETWEEN $1 AND $2",
+      [inicio_mes, fim_mes]
+    ).first['total'].to_i
+    end
+  end
+
+  def self.total_no_mes_atual
+  inicio_mes = Date.beginning_of_month(Date.today)
+  fim_mes = Date.end_of_month(Date.today)
+  
+  with_db do |client|
+    client.exec_params(
+      "SELECT COUNT(*) as total FROM aulas
+       WHERE data_aula BETWEEN $1 AND $2",
+      [inicio_mes.to_s, fim_mes.to_s]
+    ).first['total'].to_i
+    end
+  end
 end
 
+# Classe para gerenciar presenças
+class Presenca
+def self.total_no_mes_atual
+  inicio_mes = Date.beginning_of_month(Date.today)
+  fim_mes = Date.end_of_month(Date.today)
+  
+  with_db do |client|
+    client.exec_params(
+      "SELECT COUNT(*) as total FROM presencas p
+       JOIN aulas a ON p.aula_id = a.id
+       WHERE a.data_aula BETWEEN $1 AND $2 AND p.presente = TRUE",
+      [inicio_mes.to_s, fim_mes.to_s]
+    ).first['total'].to_i
+    end
+end
+
+  def self.historico_ultimos_meses(quantidade = 6)
+  with_db do |client|
+    meses = []
+    dados = []
+    
+    quantidade.downto(1) do |i|
+      data = Date.today << i  # Recua i meses
+      inicio_mes = Date.new(data.year, data.month, 1).to_s
+      fim_mes = Date.new(data.year, data.month, -1).to_s
+      
+      resultado = client.exec_params(
+        "SELECT COUNT(*) as total FROM presencas p
+         JOIN aulas a ON p.aula_id = a.id
+         WHERE a.data_aula BETWEEN $1 AND $2 AND p.presente = TRUE",
+        [inicio_mes, fim_mes]
+      ).first['total'].to_i
+      
+      meses.push("#{data.strftime('%b/%Y')}")
+      dados.push(resultado)
+    end
+    
+    {labels: meses, data: dados}
+    end
+  end
+end
 # Classe Assinatura
 class Assinatura
   def self.buscar_ativa(aluno_id)
@@ -787,8 +915,105 @@ class Assinatura
       end
     end
   end
-end
+    def self.contar_por_status(status_texto)
+    with_db do |client|
+      count = 0
+      assinaturas = client.exec("SELECT id FROM assinaturas WHERE status = 'ativa'").to_a
+      
+      assinaturas.each do |assinatura|
+        status_info = verificar_status(assinatura['id'])
+        count += 1 if status_info[:status] == status_texto
+      end
 
+      count
+    end
+  end
+end
+# Classe Notificacao
+class Notificacao
+  def self.todas
+    with_db do |client|
+      client.exec("SELECT * FROM notificacoes ORDER BY criado_em DESC").to_a
+    end
+  end
+  
+  def self.pendentes
+    with_db do |client|
+      client.exec("SELECT * FROM notificacoes WHERE lida = FALSE ORDER BY criado_em DESC").to_a
+    end
+  end
+  
+  def self.criar(titulo, mensagem, tipo = 'info')
+    with_db do |client|
+      client.exec_params(
+        "INSERT INTO notificacoes(titulo, mensagem, tipo, lida, criado_em) 
+         VALUES ($1, $2, $3, FALSE, NOW()) RETURNING id",
+        [titulo, mensagem, tipo]
+      ).first
+    end
+  end
+  
+  def self.marcar_como_lida(id)
+    with_db do |client|
+      client.exec_params(
+        "UPDATE notificacoes SET lida = TRUE, lida_em = NOW() WHERE id = $1",
+        [id]
+      )
+    end
+  end
+  
+  def self.gerar_notificacoes_automaticas
+    # Verificar mensalidades atrasadas
+    with_db do |client|
+      assinaturas = client.exec("SELECT a.id, al.nome FROM assinaturas a JOIN alunos al ON a.aluno_id = al.id WHERE a.status = 'ativa'").to_a
+      
+      assinaturas.each do |assinatura|
+        status_info = Assinatura.verificar_status(assinatura['id'])
+        
+        if status_info[:status] == "Atrasado"
+          titulo = "Mensalidade atrasada"
+          mensagem = "A mensalidade do aluno #{assinatura['nome']} está atrasada."
+          
+          # Verificar se já existe notificação similar não lida
+          notificacoes_existentes = client.exec_params(
+            "SELECT id FROM notificacoes WHERE mensagem = $1 AND lida = FALSE",
+            [mensagem]
+          ).to_a
+          
+          if notificacoes_existentes.empty?
+            criar(titulo, mensagem, 'warning')
+          end
+        end
+      end
+    end
+    
+    # Verificar aniversariantes do dia
+    hoje = Date.today
+    with_db do |client|
+      aniversariantes = client.exec_params(
+        "SELECT id, nome FROM alunos 
+         WHERE EXTRACT(MONTH FROM data_nascimento) = $1 
+         AND EXTRACT(DAY FROM data_nascimento) = $2",
+        [hoje.month, hoje.day]
+      ).to_a
+      
+      aniversariantes.each do |aluno|
+        titulo = "Aniversário hoje!"
+        mensagem = "Hoje é aniversário de #{aluno['nome']}."
+        
+        # Verificar se já existe notificação similar não lida
+        notificacoes_existentes = client.exec_params(
+          "SELECT id FROM notificacoes WHERE mensagem = $1 AND lida = FALSE",
+          [mensagem]
+        ).to_a
+        
+        if notificacoes_existentes.empty?
+          criar(titulo, mensagem, 'info')
+        end
+      end
+    end
+  end
+end
 # ========================================
 # HELPERS E MIDDLEWARES
 # ========================================
@@ -935,6 +1160,51 @@ get '/' do
   erb :index
 end
 
+# Rota para exibir página de relatórios
+get '/relatorios' do
+  @tipos_relatorio = [
+    { id: 'frequencia', nome: 'Frequência de Alunos' },
+    { id: 'mensalidades', nome: 'Status de Mensalidades' }
+  ]
+  erb :'relatorios/index'
+end
+
+# Rota para gerar relatório específico
+get '/relatorios/:tipo' do
+  tipo = params['tipo']
+  formato = params['formato'] || 'html'
+  
+  case tipo
+  when 'frequencia'
+    inicio = params['inicio'] ? Date.parse(params['inicio']) : Date.today.beginning_of_month
+    fim = params['fim'] ? Date.parse(params['fim']) : Date.today
+    
+    @relatorio = Aluno.relatorio_frequencia(inicio, fim)
+    @periodo = { inicio: inicio, fim: fim }
+    
+    if formato == 'csv'
+      content_type 'text/csv'
+      attachment "relatorio_frequencia_#{inicio.strftime('%Y%m%d')}_#{fim.strftime('%Y%m%d')}.csv"
+      
+      csv = ["Nome,Presenças,Faltas,Total de Aulas,Taxa de Frequência (%)"]
+      @relatorio.each do |r|
+        csv << "#{r[:nome]},#{r[:presencas]},#{r[:faltas]},#{r[:total_aulas]},#{r[:taxa_frequencia]}"
+      end
+      
+      return csv.join("\n")
+    else
+      erb :'relatorios/frequencia'
+    end
+  when 'mensalidades'
+    # Implementar no futuro
+    status 404
+    "Relatório de mensalidades em desenvolvimento"
+  else
+    status 404
+    "Relatório não encontrado"
+  end
+end
+
 post '/alunos' do
   erros = validar_aluno(params)
   
@@ -976,6 +1246,13 @@ get '/alunos/:id/editar' do
   @faixas = FAIXAS
   @turmas = TURMAS
   erb :editar_aluno
+end
+
+# Rota para o formulário de novo aluno
+  get '/alunos/novo' do
+    @faixas = FAIXAS
+    @turmas = TURMAS
+    erb :'alunos/novo'
 end
 
 put '/alunos/:id' do
@@ -1071,12 +1348,34 @@ post '/aulas' do
   end
 end
 
+# Rota para o formulário de nova aula
+get '/aulas/nova' do
+  @turmas = TURMAS
+  erb :'aulas/nova'
+end
+
 get '/aulas/:id' do
   @aula = Aula.buscar_por_id(params['id'])
   redirect '/aulas' if @aula.nil?
   
   @lista_presenca = Aula.lista_presenca(@aula['id'])
   erb :'aulas/show'
+end
+
+# Rota para marcar notificação como lida
+get '/notificacoes/:id/marcar-como-lida' do
+  Notificacao.marcar_como_lida(params['id'])
+  redirect back
+end
+
+get '/gerar-notificacoes' do
+  if logged_in? && current_user['admin'] == 't'
+    Notificacao.gerar_notificacoes_automaticas
+    redirect back
+  else
+    status 403
+    "Acesso negado"
+  end
 end
 
 post '/aulas/:id/presencas' do
@@ -1175,6 +1474,9 @@ get '/dashboard' do
   @total_aulas_mes = Aula.total_no_mes_atual
   @total_presencas_mes = Presenca.total_no_mes_atual
   
+  # Dados para gráficos
+  @historico_presencas = Presenca.historico_ultimos_meses
+  
   # Alunos com aniversário no mês
   @aniversariantes = Aluno.aniversariantes_do_mes
   
@@ -1182,5 +1484,6 @@ get '/dashboard' do
   @mensalidades_atrasadas = Assinatura.contar_por_status("Atrasado")
   @mensalidades_em_dia = Assinatura.contar_por_status("Em Dia")
   
+  Notificacao.gerar_notificacoes_automaticas
   erb :dashboard
 end

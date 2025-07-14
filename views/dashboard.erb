@@ -1,0 +1,107 @@
+<header>
+  <h1>Dashboard</h1>
+  <p class="subtitle">Visão Geral da Academia</p>
+</header>
+
+<div class="dashboard-grid">
+  <!-- Estatísticas de Alunos -->
+  <div class="dashboard-card">
+    <h3>Alunos</h3>
+    <div class="big-number"><%= @total_alunos %></div>
+    <p>alunos cadastrados</p>
+  </div>
+  
+  <!-- Estatísticas de Aulas do Mês -->
+  <div class="dashboard-card">
+    <h3>Aulas (Mês Atual)</h3>
+    <div class="big-number"><%= @total_aulas_mes %></div>
+    <p>aulas registradas</p>
+    <div class="sub-stat">
+      <span><%= @total_presencas_mes %> presenças</span>
+    </div>
+  </div>
+  
+  <!-- Estatísticas de Mensalidades -->
+  <div class="dashboard-card">
+    <h3>Mensalidades</h3>
+    <div class="status-row">
+      <div class="status-item">
+        <span class="status-em-dia">Em dia: <%= @mensalidades_em_dia %></span>
+      </div>
+      <div class="status-item">
+        <span class="status-atrasado">Atrasadas: <%= @mensalidades_atrasadas %></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Adicionar depois dos cards de estatísticas -->
+<div class="dashboard-card chart-card">
+  <h3>Histórico de Presenças</h3>
+  <canvas id="presencasChart" width="400" height="200"></canvas>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const ctx = document.getElementById('presencasChart').getContext('2d');
+      const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: <%= @historico_presencas[:labels].to_json %>,
+          datasets: [{
+            label: 'Presenças mensais',
+            data: <%= @historico_presencas[:data].to_json %>,
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 2,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            title: {
+              display: true,
+              text: 'Evolução de Presenças'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    });
+  </script>
+</div>
+
+<!-- Ações Rápidas -->
+<div class="dashboard-section">
+  <h3>Ações Rápidas</h3>
+  <div class="action-buttons">
+    <a href="/aulas/nova" class="btn btn-primary">Nova Aula</a>
+    <a href="/alunos/novo" class="btn btn-secondary">Novo Aluno</a>
+    <a href="/aulas" class="btn btn-secondary">Ver Aulas</a>
+  </div>
+</div>
+
+<!-- Aniversariantes do Mês -->
+<div class="dashboard-section">
+  <h3>Aniversariantes do Mês</h3>
+  <% if @aniversariantes && @aniversariantes.any? %>
+    <ul class="birthday-list">
+      <% @aniversariantes.each do |aluno| %>
+        <li>
+          <div class="birthday-name"><%= h aluno['nome'] %></div>
+          <div class="birthday-date"><%= format_date(aluno['data_nascimento']) %></div>
+          <a href="/alunos/<%= aluno['id'] %>" class="btn btn-small">Ver Perfil</a>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="empty-state">Nenhum aniversariante neste mês.</p>
+  <% end %>
+</div>

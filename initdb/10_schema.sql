@@ -63,6 +63,16 @@ CREATE TABLE IF NOT EXISTS presencas (
     UNIQUE(aluno_id, aula_id)
 );
 
+CREATE TABLE IF NOT EXISTS notificacoes (
+  id SERIAL PRIMARY KEY,
+  titulo VARCHAR(100) NOT NULL,
+  mensagem TEXT NOT NULL,
+  tipo VARCHAR(20) NOT NULL DEFAULT 'info',
+  lida BOOLEAN NOT NULL DEFAULT FALSE,
+  criado_em TIMESTAMP NOT NULL DEFAULT NOW(),
+  lida_em TIMESTAMP
+);
+
 INSERT INTO usuarios (email, nome, password_digest) VALUES
 ('admin@jpteam.com', 'Admin JPM', '$2a$12$GjwrLz6wYSLcttaAXeSdkugn3TR9WzOLfX3P6rrh0H1NwSdKVDZ9K')
 ON CONFLICT (email) DO NOTHING;

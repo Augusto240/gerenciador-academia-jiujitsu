@@ -1,0 +1,33 @@
+<header>
+  <h1>Relatórios</h1>
+  <a href="/dashboard" class="btn-voltar">Voltar para o Dashboard</a>
+</header>
+
+<div class="card">
+  <h2>Gerar Relatório</h2>
+  
+  <form action="/relatorios/frequencia" method="GET">
+    <label for="tipo">Tipo de Relatório:</label>
+    <select name="tipo" id="tipo" required>
+      <% @tipos_relatorio.each do |tipo| %>
+        <option value="<%= tipo[:id] %>"><%= tipo[:nome] %></option>
+      <% end %>
+    </select>
+    
+    <div id="params-frequencia" class="params-section">
+      <label for="inicio">Data Inicial:</label>
+      <input type="date" name="inicio" value="<%= Date.today.beginning_of_month.strftime('%Y-%m-%d') %>">
+      
+      <label for="fim">Data Final:</label>
+      <input type="date" name="fim" value="<%= Date.today.strftime('%Y-%m-%d') %>">
+    </div>
+    
+    <label for="formato">Formato:</label>
+    <select name="formato" id="formato">
+      <option value="html">Visualizar no navegador</option>
+      <option value="csv">Exportar como CSV</option>
+    </select>
+    
+    <button type="submit" class="btn-primary">Gerar Relatório</button>
+  </form>
+</div>

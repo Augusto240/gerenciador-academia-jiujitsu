@@ -9,12 +9,40 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
     <link rel="icon" href="/logo.png" type="image/png" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 </head>
 <body>
+
+
+<div class="notificacoes-container">
+  <% notificacoes = Notificacao.pendentes %>
+  <% if notificacoes.any? %>
+    <div class="notificacoes-lista">
+      <h3>Notificações (<%= notificacoes.size %>)</h3>
+      <% notificacoes.each do |notif| %>
+        <div class="notificacao notificacao-<%= notif['tipo'] %>">
+          <div class="notificacao-header">
+            <h4><%= h notif['titulo'] %></h4>
+            <span class="notificacao-data"><%= Time.parse(notif['criado_em']).strftime('%d/%m/%Y %H:%M') %></span>
+          </div>
+          <div class="notificacao-body">
+            <%= h notif['mensagem'] %>
+          </div>
+          <div class="notificacao-actions">
+            <a href="/notificacoes/<%= notif['id'] %>/marcar-como-lida" class="btn-small">Marcar como lida</a>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    <% end %>
+    </div>
+
     <div class="container">
-        <nav class="main-nav">
+       <nav class="main-nav">
+            <a href="/dashboard">Dashboard</a>
             <a href="/">Alunos</a>
             <a href="/aulas">Aulas e Presença</a>
+            <a href="/relatorios">Relatórios</a>
         </nav>
         
         <% if session[:mensagem_sucesso] %>
