@@ -1,3 +1,4 @@
+
 services:
   app:
     build: .
@@ -11,24 +12,22 @@ services:
       DATABASE_HOST: db
       DATABASE_USER: jiujitsu_user
       DATABASE_PASSWORD: senha_forte_123
-      DATABASE_NAME: academia_jiujitsu
+      DATABASE_NAME: academia_jiujitsu_dev
     depends_on:
       - db
 
   db:
-    image: mariadb:10.11
+    image: postgres:14-alpine
     restart: always
     ports:
-      - "3307:3306"
+      - "5433:5432" 
     environment:
-      MARIADB_ROOT_PASSWORD: sua_senha_root_aqui
-      MARIADB_DATABASE: academia_jiujitsu
-      MARIADB_USER: jiujitsu_user
-      MARIADB_PASSWORD: senha_forte_123
+      POSTGRES_USER: jiujitsu_user
+      POSTGRES_PASSWORD: senha_forte_123
+      POSTGRES_DB: academia_jiujitsu_dev
     volumes:
-      - mariadb_data:/var/lib/mysql
-      # Monta a pasta inteira. Os scripts dentro dela serão executados em ordem alfabética.
-      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - postgres_data:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d
 
 volumes:
-  mariadb_data: {}
+  postgres_data: {}

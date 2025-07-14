@@ -1,12 +1,20 @@
 GEM
   remote: https://rubygems.org/
   specs:
+<<<<<<< HEAD
     bigdecimal (3.2.2)
+=======
+    bcrypt (3.1.20)
+    connection_pool (2.5.3)
+>>>>>>> feature/postgresql
     mustermann (2.0.2)
       ruby2_keywords (~> 0.0.1)
-    mysql2 (0.5.6)
     nio4r (2.7.4)
+<<<<<<< HEAD
     ostruct (0.6.2)
+=======
+    pg (1.5.9)
+>>>>>>> feature/postgresql
     puma (6.6.0)
       nio4r (~> 2.0)
     rack (2.2.17)
@@ -25,9 +33,15 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
+<<<<<<< HEAD
   bigdecimal
   mysql2
   ostruct
+=======
+  bcrypt
+  connection_pool
+  pg (~> 1.5)
+>>>>>>> feature/postgresql
   puma
   sinatra (~> 2.2)
 

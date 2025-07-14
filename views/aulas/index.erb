@@ -6,7 +6,7 @@
   <h2>Registrar Nova Aula</h2>
   <form action="/aulas" method="POST">
     <label for="data_aula">Data da Aula:</label>
-    <input type="date" name="data_aula" value="<%= Date.today %>" required>
+    <input type="date" name="data_aula" value="<%= Date.today.strftime('%Y-%m-%d') %>" required>
 
     <label for="descricao">Descrição (opcional):</label>
     <input type="text" name="descricao" placeholder="Ex: Treino de Passagem de Guarda">
@@ -36,15 +36,18 @@
     <thead>
       <tr>
         <th>Data</th>
+        <th>Turma</th>
         <th>Descrição</th>
         <th>Ações</th>
       </tr>
     </thead>
     <tbody>
       <% @aulas.each do |aula| %>
+        <% da = aula['data_aula'].is_a?(String) ? Date.parse(aula['data_aula']) : aula['data_aula'] %>
         <tr>
-          <td><%= aula['data_aula'].strftime('%d/%m/%Y') %></td>
-          <td><%= aula['descricao'] %></td>
+          <td><%= da.strftime('%d/%m/%Y') %></td>
+          <td><%= h(aula['turma'] || '—') %></td>
+          <td><%= h aula['descricao'] %></td>
           <td>
             <a href="/aulas/<%= aula['id'] %>" class="btn-editar">
               Ver / Editar Presença

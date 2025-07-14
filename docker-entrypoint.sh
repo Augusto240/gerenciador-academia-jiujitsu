@@ -1,10 +1,10 @@
 #!/bin/sh
+#!/bin/bash
+
 set -e
 
-# Se DATABASE_HOST estiver definido, espera conexão antes de iniciar
 if [ -n "$DATABASE_HOST" ]; then
-  ./wait-for-it.sh "$DATABASE_HOST:3306" --timeout=60 --strict
+  ./wait-for-it.sh "$DATABASE_HOST:5432" --timeout=60 --strict
 fi
 
-# Executa comando padrão
 exec "$@"
