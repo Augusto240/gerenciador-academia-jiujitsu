@@ -19,6 +19,9 @@ Este projeto nasceu de uma necessidade real: substituir a planilha manual do meu
 * ✅ **Histórico de Graduação:** Registro de todas as trocas de faixa de um aluno, atualizando seu status atual no sistema.
 * ✅ **Controle de Aulas e Presença:** Cadastro de aulas por turma e uma interface de lista de chamada para marcar a presença dos alunos.
 * ✅ **Anamnese:** Seção dedicada no cadastro e perfil do aluno para registrar informações importantes de saúde.
+* ✅ **Dashboard Interativo:** Painel principal com estatísticas, gráficos de presença, status de mensalidades e aniversariantes do mês.
+* ✅ **Sistema de Notificações:** Alertas automáticos para mensalidades atrasadas e aniversários, com interface para gerenciamento.
+* ✅ **Relatórios e Exportação:** Geração de relatórios de frequência com exportação para CSV e filtros por período.
 * ✅ **Interface Moderna e Profissional:** UI completamente redesenhada com uma paleta de cores sóbria, tipografia clara e componentes consistentes.
 * ✅ **Ambiente Containerizado:** 100% configurado com Docker e Docker Compose para portabilidade e facilidade de execução.
 * ✅ **Segurança de Dados:** Separação da estrutura (`schema.sql`) e dos dados (`data.sql`), com os dados sensíveis dos alunos sendo ignorados pelo Git para garantir a privacidade.
@@ -33,7 +36,8 @@ Este projeto nasceu de uma necessidade real: substituir a planilha manual do meu
 
 * **Backend:** Ruby 3.2.3 com o micro-framework Sinatra
 * **Banco de Dados:** PostgreSQL 14
-* **Frontend:** HTML5, CSS3, ERB (Embedded Ruby)
+* **Frontend:** HTML5, CSS3, JavaScript, ERB (Embedded Ruby)
+* **Visualização de Dados:** Chart.js para gráficos interativos
 * **Ambiente e Orquestração:** Docker & Docker Compose
 * **Segurança:** BCrypt para senhas, Prepared Statements para prevenção de SQL Injection
 
@@ -76,19 +80,20 @@ Graças ao Docker, iniciar todo o ambiente (aplicação + banco de dados) requer
 Para parar todo o ambiente, basta voltar ao terminal e pressionar `Ctrl` + `C`.
 
 ## Estrutura do Projeto
-
-```
 /
-|-- app.rb                  # O coração da aplicação Sinatra, com todas as rotas, lógica e padrões de design.
-|-- Dockerfile              # A "receita" para construir a imagem Docker do aplicativo Ruby.
-|-- docker-compose.yml      # O "maestro" que orquestra os contêineres do app e do banco.
-|-- /initdb/                # Pasta com os scripts de inicialização do banco de dados.
-|   |-- 10_schema.sql       # Cria a estrutura de todas as tabelas.
-|-- Gemfile / Gemfile.lock  # Define as dependências (gems) do projeto.
-|-- /public/                # Pasta para arquivos estáticos (CSS, imagens).
-|-- /views/                 # Pasta para os templates de HTML com Ruby embutido (ERB).
-|-- README.md               # Este arquivo de documentação.
-```
+├── app.rb                   # O coração da aplicação Sinatra, com todas as rotas, lógica e padrões de design
+├── Dockerfile               # A "receita" para construir a imagem Docker do aplicativo Ruby
+├── docker-compose.yml       # O "maestro" que orquestra os contêineres do app e do banco
+├── /initdb/                 # Pasta com os scripts de inicialização do banco de dados
+│   └── 10_schema.sql        # Cria a estrutura de todas as tabelas
+├── Gemfile / Gemfile.lock   # Define as dependências (gems) do projeto
+├── /public/                 # Pasta para arquivos estáticos (CSS, imagens)
+├── /views/                  # Pasta para os templates de HTML com Ruby embutido (ERB)
+│   ├── /alunos/             # Templates relacionados a alunos
+│   ├── /aulas/              # Templates relacionados a aulas
+│   └── /relatorios/         # Templates para relatórios
+└── README.md                # Este arquivo de documentação
+
 
 ## Padrões de Design Implementados
 
@@ -100,11 +105,12 @@ Para parar todo o ambiente, basta voltar ao terminal e pressionar `Ctrl` + `C`.
 ## Roadmap de Melhorias
 
 * **Melhorias Técnicas:**
-    * [ ] Implementar sistema de notificações para mensalidades próximas do vencimento.
-    * [ ] Adicionar relatórios estatísticos e gráficos de presença/evolução dos alunos.
     * [ ] Desenvolver um aplicativo móvel para complementar o sistema web.
     * [ ] Implementar funcionalidades de backup automático para os dados.
     * [ ] Escrever testes automatizados para a aplicação.
+    * [ ] Adicionar um portal do aluno para acesso próprio às informações.
+    * [ ] Integrar com métodos de pagamento online.
+    * [ ] Implementar sistema de eventos e competições.
 
 ---
 
