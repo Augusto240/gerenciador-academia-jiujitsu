@@ -9,29 +9,51 @@ use Rack::MethodOverride
 enable :sessions
 set :session_secret, ENV.fetch('SESSION_SECRET') { "uma_chave_super_secreta_e_aleatoria_para_desenvolvimento" }
 
-# Constantes globais
+# ========================================
+# CONSTANTES E CONFIGURAÇÃO
+# ========================================
+
 FAIXAS = ['Branca', 'Cinza/Branca', 'Cinza', 'Cinza/Preta', 'Amarela/Branca', 'Amarela', 'Amarela/Preta', 'Laranja/Branca', 'Laranja', 'Laranja/Preta', 'Verde/Branca', 'Verde', 'Verde/Preta', 'Azul', 'Roxa', 'Marrom', 'Preta']
 TURMAS = ['Kids 2 a 3 anos', 'Kids', 'Adolescentes/Juvenil', 'Adultos', 'Feminino', 'Master/Sênior']
+DB_POOL_SIZE = ENV.fetch('DB_POOL_SIZE', 10).to_i
 
-# Configuração de ambiente e banco de dados
+# Configuração de ambiente
 configure do
-  # Configuração de logs
-  set :logger, Logger.new(ENV['RACK_ENV'] == 'production' ? 'logs/production.log' : STDOUT)
+  # Diretório de logs
+  log_dir = File.join(File.dirname(__FILE__), 'logs')
+  Dir.mkdir(log_dir) unless File.exist?(log_dir)
+  
+  if ENV['RACK_ENV'] == 'production'
+    log_file = File.new(File.join(log_dir, "production.log"), 'a+')
+    log_file.sync = true
+    set :logger, Logger.new(log_file)
+  else
+    set :logger, Logger.new(STDOUT)
+  end
+  
   enable :logging
 end
 
-# Pool de conexões para o banco de dados
-DB_POOL = ConnectionPool.new(size: 5, timeout: 5) do
-  if ENV['DATABASE_URL']
-    PG.connect(ENV['DATABASE_URL'])
+# Pool de conexões para o banco de dados (otimizado)
+DB_POOL = ConnectionPool.new(size: DB_POOL_SIZE, timeout: 5) do
+  connection_params = if ENV['DATABASE_URL']
+    ENV['DATABASE_URL']
   else
-    PG.connect(
+    {
       host: ENV.fetch('DATABASE_HOST', 'db'),
       user: ENV.fetch('DATABASE_USER', 'jiujitsu_user'),
       password: ENV.fetch('DATABASE_PASSWORD', 'senha_forte_123'),
-      dbname: ENV.fetch('DATABASE_NAME', 'academia_jiujitsu_dev')
-    )
+      dbname: ENV.fetch('DATABASE_NAME', 'academia_jiujitsu_dev'),
+      # Parâmetros que melhoram a performance
+      connect_timeout: 5,
+      keepalives: 1,
+      keepalives_idle: 30,
+      keepalives_interval: 10,
+      keepalives_count: 3
+    }
   end
+  
+  PG.connect(connection_params)
 end
 
 # Helper para usar o pool de conexões
@@ -46,23 +68,286 @@ def with_db
   end
 end
 
-# Módulo de validação
+# ========================================
+# APRESENTAÇÃO (PRESENTERS)
+# ========================================
+
+# BasePresenter - Base para os outros presenters
+class BasePresenter
+  def initialize(model)
+    @model = model
+  end
+  
+  def method_missing(method, *args, &block)
+    if @model.respond_to?(:[]) && @model.has_key?(method.to_s)
+      @model[method.to_s]
+    elsif @model.respond_to?(method)
+      @model.send(method, *args, &block)
+    else
+      super
+    end
+  end
+  
+  def respond_to_missing?(method, include_private = false)
+    (@model.respond_to?(:[]) && @model.has_key?(method.to_s)) || 
+    @model.respond_to?(method, include_private) || 
+    super
+  end
+  
+  def format_date(date_value, format = '%d/%m/%Y')
+    return 'N/A' if date_value.nil? || (date_value.is_a?(String) && date_value.empty?)
+    
+    begin
+      date = date_value.is_a?(String) ? Date.parse(date_value) : date_value
+      date.strftime(format)
+    rescue
+      'Data inválida'
+    end
+  end
+  
+  def date_for_input(date_value)
+    return Date.today.strftime('%Y-%m-%d') unless date_value
+    
+    begin
+      date = date_value.is_a?(String) ? Date.parse(date_value) : date_value
+      date.strftime('%Y-%m-%d')
+    rescue
+      Date.today.strftime('%Y-%m-%d')
+    end
+  end
+  
+  def format_currency(value)
+    "R$ #{'%.2f' % value.to_f}"
+  end
+end
+
+# AlunoPresenter - Para apresentação dos dados de alunos
+class AlunoPresenter < BasePresenter
+  def status
+    @model['bolsista'] == 't' || @model['bolsista'] == true ? 'Bolsista' : 'Pagante'
+  end
+  
+  def data_nascimento_formatada
+    format_date(@model['data_nascimento'])
+  end
+  
+  def data_hoje_para_input
+    Date.today.strftime('%Y-%m-%d')
+  end
+  
+  def idade
+    return 'N/A' if @model['data_nascimento'].nil? || @model['data_nascimento'].to_s.empty?
+    
+    begin
+      data_nasc = Date.parse(@model['data_nascimento'].to_s)
+      hoje = Date.today
+      idade = hoje.year - data_nasc.year
+      idade -= 1 if hoje < Date.new(hoje.year, data_nasc.month, data_nasc.day)
+      idade.to_s
+    rescue
+      'N/A'
+    end
+  end
+  
+  def problema_saude
+    (@model['saude_problema'] && !@model['saude_problema'].empty?) ? @model['saude_problema'] : 'Não informado'
+  end
+  
+  def uso_medicacao
+    (@model['saude_medicacao'] && !@model['saude_medicacao'].empty?) ? @model['saude_medicacao'] : 'Não informado'
+  end
+  
+  def historico_lesoes
+    (@model['saude_lesao'] && !@model['saude_lesao'].empty?) ? @model['saude_lesao'] : 'Não informado'
+  end
+  
+  def uso_substancias
+    (@model['saude_substancia'] && !@model['saude_substancia'].empty?) ? @model['saude_substancia'] : 'Não informado'
+  end
+  
+  def possui_graduacoes?(graduacoes)
+    graduacoes && graduacoes.any?
+  end
+  
+  def formatar_graduacao(graduacao)
+    data = format_date(graduacao['data_graduacao'])
+    "#{graduacao['faixa']} em #{data}"
+  end
+end
+
+# AulaPresenter - Para apresentação dos dados de aulas
+class AulaPresenter < BasePresenter
+  def data_formatada
+    format_date(@model['data_aula'])
+  end
+  
+  def descricao
+    @model['descricao'].to_s.empty? ? '—' : @model['descricao']
+  end
+  
+  def turma_formatada
+    @model['turma'].to_s.empty? ? '—' : @model['turma']
+  end
+  
+  def aluno_presente?(aluno)
+    aluno['presente'] == 't' || aluno['presente'] == true
+  end
+end
+
+# ========================================
+# SERVIÇOS (SERVICES)
+# ========================================
+
+# Serviço para gerenciamento de pagamentos
+module PagamentoService
+  def self.registrar_pagamento(assinatura_id, aluno_id, valor_pago, data_pagamento)
+    result = { success: false, message: "", payment_id: nil }
+
+    begin
+      # Validações básicas (além das feitas no controlador)
+      if valor_pago.to_f <= 0
+        result[:message] = "Valor do pagamento deve ser positivo"
+        return result
+      end
+
+      # Registrar pagamento
+      with_db do |client|
+        payment_record = client.exec_params(
+          "INSERT INTO pagamentos(assinatura_id, valor_pago, data_pagamento) 
+           VALUES ($1, $2, $3) RETURNING id",
+          [assinatura_id, valor_pago, data_pagamento]
+        ).first
+
+        # Atualizar status da assinatura se necessário
+        client.exec_params(
+          "UPDATE assinaturas SET status = 'ativa' WHERE id = $1 AND status != 'ativa'",
+          [assinatura_id]
+        )
+
+        result[:success] = true
+        result[:message] = "Pagamento registrado com sucesso!"
+        result[:payment_id] = payment_record['id']
+      end
+    rescue PG::Error => e
+      result[:message] = "Erro ao registrar pagamento: #{e.message}"
+    rescue => e
+      result[:message] = "Erro inesperado: #{e.message}"
+    end
+
+    result
+  end
+end
+
+# Serviço para gerenciamento de aulas e presenças
+module AulaService
+  def self.criar_e_inicializar(params)
+    result = { success: false, message: "", aula_id: nil }
+    
+    begin
+      with_db do |client|
+        turma_aula = params['turma'].empty? ? nil : params['turma']
+        todas_turmas = params['todas_turmas'] == 'on'
+
+        insert_result = client.exec_params(
+          "INSERT INTO aulas (data_aula, turma, descricao) VALUES ($1, $2, $3) RETURNING id",
+          [params['data_aula'], turma_aula, params['descricao']]
+        ).first
+        aula_id = insert_result['id']
+
+        # Selecionar alunos para a lista de presença
+        alunos_q = if todas_turmas
+          client.exec("SELECT id FROM alunos")
+        elsif turma_aula
+          client.exec_params("SELECT id FROM alunos WHERE turma = $1", [turma_aula])
+        else
+          client.exec("SELECT id FROM alunos")
+        end
+
+        # Inicializar presenças em massa
+        alunos_q.each do |a|
+          client.exec_params(
+            "INSERT INTO presencas (aula_id, aluno_id, presente) VALUES ($1, $2, FALSE) ON CONFLICT (aluno_id, aula_id) DO NOTHING",
+            [aula_id, a['id']]
+          )
+        end
+        
+        result[:success] = true
+        result[:message] = "Aula criada com sucesso!"
+        result[:aula_id] = aula_id
+      end
+    rescue PG::Error => e
+      result[:message] = "Erro de banco de dados: #{e.message}"
+    rescue => e
+      result[:message] = "Erro inesperado: #{e.message}"
+    end
+    
+    result
+  end
+  
+  def self.atualizar_presencas(aula_id, presentes = [])
+    result = { success: false, message: "", presencas_atualizadas: 0 }
+    
+    begin
+      with_db do |client|
+        # Marcar todos como ausentes primeiro
+        client.exec_params("UPDATE presencas SET presente = FALSE WHERE aula_id = $1", [aula_id])
+        
+        # Contar quantos alunos serão marcados como presentes
+        count = presentes.length
+        
+        # Marcar os presentes
+        presentes.each do |aluno_id|
+          client.exec_params(
+            "UPDATE presencas SET presente = TRUE WHERE aula_id = $1 AND aluno_id = $2",
+            [aula_id, aluno_id]
+          )
+        end
+        
+        result[:success] = true
+        result[:message] = "Lista de presença atualizada com sucesso!"
+        result[:presencas_atualizadas] = count
+      end
+    rescue => e
+      result[:message] = "Erro ao atualizar presenças: #{e.message}"
+    end
+    
+    result
+  end
+end
+
+# ========================================
+# VALIDAÇÃO
+# ========================================
+
 module Validador
   def validar_aluno(params)
     erros = []
     
+    # Validações básicas
     erros << "Nome é obrigatório" if params['nome'].to_s.strip.empty?
     erros << "Nome deve ter entre 2 e 100 caracteres" if params['nome'].to_s.length < 2 || params['nome'].to_s.length > 100
     erros << "Faixa inválida" unless FAIXAS.include?(params['cor_faixa'])
     erros << "Turma inválida" unless TURMAS.include?(params['turma'])
     
+    # Validação de data de nascimento
     if params['data_nascimento'] && !params['data_nascimento'].empty?
       begin
         data_nasc = Date.parse(params['data_nascimento'])
+        idade = calcular_idade(data_nasc)
+        
         erros << "Data de nascimento não pode ser futura" if data_nasc > Date.today
         erros << "Data de nascimento inválida (muito antiga)" if data_nasc < Date.new(1900, 1, 1)
+        erros << "Idade mínima para cadastro é 2 anos" if idade < 2
+        erros << "Idade máxima para cadastro é 100 anos" if idade > 100
       rescue Date::Error
         erros << "Data de nascimento em formato inválido"
+      end
+    end
+    
+    # Validação de campos de saúde (opcional)
+    ['saude_problema', 'saude_medicacao', 'saude_lesao', 'saude_substancia'].each do |campo|
+      if params[campo] && params[campo].length > 500
+        erros << "Campo '#{campo.gsub('saude_', '')}' não deve exceder 500 caracteres"
       end
     end
     
@@ -78,12 +363,17 @@ module Validador
       begin
         data_aula = Date.parse(params['data_aula'])
         erros << "Data da aula não pode ser futura" if data_aula > Date.today
+        erros << "Data da aula muito antiga" if data_aula < Date.today - 365  # Não permitir datas de mais de 1 ano atrás
       rescue Date::Error
         erros << "Data da aula em formato inválido"
       end
     end
     
     erros << "Turma inválida" if !params['turma'].empty? && !TURMAS.include?(params['turma'])
+    
+    if params['descricao'] && params['descricao'].length > 255
+      erros << "Descrição não deve exceder 255 caracteres"
+    end
     
     erros
   end
@@ -105,7 +395,9 @@ module Validador
     
     if params['data_pagamento'] && !params['data_pagamento'].empty?
       begin
-        Date.parse(params['data_pagamento'])
+        data_pag = Date.parse(params['data_pagamento'])
+        erros << "Data do pagamento não pode ser futura" if data_pag > Date.today
+        erros << "Data do pagamento muito antiga" if data_pag < Date.today - 365*2  # Limitar a 2 anos atrás
       rescue Date::Error
         erros << "Data do pagamento em formato inválido"
       end
@@ -113,7 +405,41 @@ module Validador
     
     erros
   end
+  
+  def validar_graduacao(params)
+    erros = []
+    
+    erros << "Faixa é obrigatória" if params['faixa'].to_s.strip.empty?
+    erros << "Data da graduação é obrigatória" if params['data_graduacao'].to_s.strip.empty?
+    
+    if params['faixa'] && !FAIXAS.include?(params['faixa'])
+      erros << "Faixa inválida"
+    end
+    
+    if params['data_graduacao'] && !params['data_graduacao'].empty?
+      begin
+        data_grad = Date.parse(params['data_graduacao'])
+        erros << "Data da graduação não pode ser futura" if data_grad > Date.today
+        erros << "Data da graduação muito antiga" if data_grad < Date.today - 365*10  # Limitar a 10 anos atrás
+      rescue Date::Error
+        erros << "Data da graduação em formato inválido"
+      end
+    end
+    
+    erros
+  end
+  
+  def calcular_idade(data_nasc)
+    hoje = Date.today
+    idade = hoje.year - data_nasc.year
+    idade -= 1 if hoje < Date.new(hoje.year, data_nasc.month, data_nasc.day)
+    idade
+  end
 end
+
+# ========================================
+# MODELOS (MODELS)
+# ========================================
 
 # Classe Aluno
 class Aluno
@@ -129,7 +455,10 @@ class Aluno
     end
   end
 
-  def self.buscar_com_filtros(filtros = {})
+  def self.buscar_com_filtros(filtros = {}, pagina = 1, por_pagina = 20)
+    pagina = [pagina.to_i, 1].max
+    offset = (pagina - 1) * por_pagina
+    
     with_db do |client|
       query = "SELECT id, nome, data_nascimento, cor_faixa, turma FROM alunos"
       conditions = []
@@ -156,6 +485,13 @@ class Aluno
 
       query += " WHERE #{conditions.join(' AND ')}" unless conditions.empty?
       query += " ORDER BY nome ASC"
+      
+      # Adicionar paginação se solicitado
+      if por_pagina > 0
+        query += " LIMIT $#{param_count} OFFSET $#{param_count + 1}"
+        params_list << por_pagina
+        params_list << offset
+      end
 
       result = client.exec_params(query, params_list).to_a
       
@@ -177,7 +513,21 @@ class Aluno
         end
       end
       
-      result
+      # Se paginação estiver ativa, contar total
+      if por_pagina > 0
+        count_query = "SELECT COUNT(*) AS total FROM alunos"
+        count_query += " WHERE #{conditions.join(' AND ')}" unless conditions.empty?
+        total = client.exec_params(count_query, params_list[0..-3] || []).first['total'].to_i
+        
+        return {
+          alunos: result, 
+          total: total,
+          pagina_atual: pagina,
+          total_paginas: (total.to_f / por_pagina).ceil
+        }
+      else
+        return result
+      end
     end
   end
 
@@ -209,7 +559,7 @@ class Aluno
       SQL
 
       params_list = [
-        params['nome'],
+        params['nome'].strip,
         params['data_nascimento'].empty? ? nil : params['data_nascimento'],
         params['cor_faixa'],
         params['turma'],
@@ -245,7 +595,7 @@ class Aluno
       SQL
       
       params_list = [
-        params['nome'],
+        params['nome'].strip,
         params['data_nascimento'].empty? ? nil : params['data_nascimento'],
         params['cor_faixa'],
         params['turma'],
@@ -325,35 +675,8 @@ class Aula
   end
 
   def self.criar(params)
-    with_db do |client|
-      turma_aula = params['turma'].empty? ? nil : params['turma']
-      todas_turmas = params['todas_turmas'] == 'on'
-
-      result = client.exec_params(
-        "INSERT INTO aulas (data_aula, turma, descricao) VALUES ($1, $2, $3) RETURNING id",
-        [params['data_aula'], turma_aula, params['descricao']]
-      )
-      aula_id = result.first['id']
-
-      # Inicializar lista de presença
-      if todas_turmas
-        alunos_q = client.exec("SELECT id FROM alunos")
-      elsif turma_aula
-        alunos_q = client.exec_params("SELECT id FROM alunos WHERE turma = $1", [turma_aula])
-      else
-        alunos_q = client.exec("SELECT id FROM alunos")
-      end
-
-      # Inserir presença inicial (todos ausentes)
-      alunos_q.each do |a|
-        client.exec_params(
-          "INSERT INTO presencas (aula_id, aluno_id, presente) VALUES ($1, $2, FALSE) ON CONFLICT (aluno_id, aula_id) DO NOTHING",
-          [aula_id, a['id']]
-        )
-      end
-
-      aula_id
-    end
+    result = AulaService.criar_e_inicializar(params)
+    result[:aula_id]
   end
 
   def self.lista_presenca(aula_id)
@@ -366,18 +689,7 @@ class Aula
   end
 
   def self.atualizar_presencas(aula_id, presentes = [])
-    with_db do |client|
-      # Marcar todos como ausentes primeiro
-      client.exec_params("UPDATE presencas SET presente = FALSE WHERE aula_id = $1", [aula_id])
-      
-      # Marcar os presentes
-      presentes.each do |aluno_id|
-        client.exec_params(
-          "UPDATE presencas SET presente = TRUE WHERE aula_id = $1 AND aluno_id = $2",
-          [aula_id, aluno_id]
-        )
-      end
-    end
+    AulaService.atualizar_presencas(aula_id, presentes)[:success]
   end
 end
 
@@ -448,6 +760,10 @@ class Assinatura
   end
 end
 
+# ========================================
+# HELPERS E MIDDLEWARES
+# ========================================
+
 # Helpers para as views
 helpers do
   include Validador
@@ -468,7 +784,39 @@ helpers do
   end
 
   def log_action(acao, dados = {})
-    logger.info("#{current_user['nome']} (#{current_user['id']}) - #{acao} - #{dados.inspect}")
+    user_info = current_user ? "#{current_user['nome']} (#{current_user['id']})" : "Sistema"
+    logger.info("#{user_info} - #{acao} - #{dados.inspect}")
+  end
+  
+  # Helper para usar presenters
+  def present(model, klass = nil)
+    presenter_class = klass || "#{model.class.name}Presenter".constantize
+    presenter_class.new(model)
+  rescue NameError
+    # Se não encontrar uma classe presenter específica, usar o BasePresenter genérico
+    BasePresenter.new(model)
+  end
+  
+  # Helper para formatação de moeda
+  def format_currency(value)
+    "R$ #{'%.2f' % value.to_f}"
+  end
+  
+  # Helper para formatação de data
+  def format_date(date_value, format = '%d/%m/%Y')
+    return 'N/A' if date_value.nil? || (date_value.is_a?(String) && date_value.empty?)
+    
+    begin
+      date = date_value.is_a?(String) ? Date.parse(date_value) : date_value
+      date.strftime(format)
+    rescue
+      'Data inválida'
+    end
+  end
+  
+  # Helper para gerar data hoje no formato para input
+  def today_for_input
+    Date.today.strftime('%Y-%m-%d')
   end
 end
 
@@ -487,6 +835,10 @@ error do
   session[:mensagem_erro] = "Ocorreu um erro inesperado. Por favor tente novamente."
   redirect '/'
 end
+
+# ========================================
+# ROTAS
+# ========================================
 
 # Rotas de autenticação
 get('/login') { erb :'auth/login', layout: false }
@@ -526,13 +878,29 @@ end
 
 # Rotas para alunos
 get '/' do
-  @alunos = Aluno.buscar_com_filtros(
-    busca: params[:busca],
-    faixa: params[:faixa],
-    turma: params[:turma]
+  pagina = params[:pagina]&.to_i || 1
+  por_pagina = params[:por_pagina]&.to_i || 20
+  
+  result = Aluno.buscar_com_filtros(
+    {
+      busca: params[:busca],
+      faixa: params[:faixa],
+      turma: params[:turma]
+    },
+    pagina,
+    por_pagina
   )
   
-  @total_alunos = Aluno.total
+  if result.is_a?(Hash)
+    @alunos = result[:alunos]
+    @pagina_atual = result[:pagina_atual]
+    @total_paginas = result[:total_paginas]
+    @total_alunos = result[:total]
+  else
+    @alunos = result
+    @total_alunos = @alunos.length
+  end
+  
   @faixas = FAIXAS
   @turmas = TURMAS
   erb :index
@@ -657,10 +1025,16 @@ post '/aulas' do
   end
 
   begin
-    aula_id = Aula.criar(params)
-    log_action("Criou aula", { id: aula_id, data: params['data_aula'] })
-    session[:mensagem_sucesso] = "Aula criada com sucesso!"
-    redirect "/aulas/#{aula_id}"
+    result = AulaService.criar_e_inicializar(params)
+    
+    if result[:success]
+      log_action("Criou aula", { id: result[:aula_id], data: params['data_aula'] })
+      session[:mensagem_sucesso] = result[:message]
+      redirect "/aulas/#{result[:aula_id]}"
+    else
+      session[:mensagem_erro] = result[:message]
+      redirect "/aulas"
+    end
   rescue => e
     logger.error("Erro ao criar aula: #{e.message}")
     session[:mensagem_erro] = "Erro ao criar aula. Verifique os dados e tente novamente."
@@ -678,9 +1052,18 @@ end
 
 post '/aulas/:id/presencas' do
   begin
-    Aula.atualizar_presencas(params['id'], params['presentes'] || [])
-    log_action("Atualizou presenças", { aula_id: params['id'], presentes: (params['presentes'] || []).count })
-    session[:mensagem_sucesso] = "Lista de presença atualizada!"
+    result = AulaService.atualizar_presencas(params['id'], params['presentes'] || [])
+    
+    if result[:success]
+      log_action("Atualizou presenças", { 
+        aula_id: params['id'], 
+        presentes: result[:presencas_atualizadas]
+      })
+      session[:mensagem_sucesso] = result[:message]
+    else
+      session[:mensagem_erro] = result[:message]
+    end
+    
     redirect "/aulas/#{params['id']}"
   rescue => e
     logger.error("Erro ao atualizar presenças: #{e.message}")
@@ -700,16 +1083,24 @@ post '/pagamentos' do
   end
 
   begin
-    Assinatura.registrar_pagamento(
-      params['assinatura_id'], 
+    result = PagamentoService.registrar_pagamento(
+      params['assinatura_id'],
+      params['aluno_id'],
       params['valor_pago'], 
       params['data_pagamento']
     )
-    log_action("Registrou pagamento", { 
-      aluno_id: params['aluno_id'], 
-      valor: params['valor_pago'] 
-    })
-    session[:mensagem_sucesso] = "Pagamento registrado com sucesso!"
+    
+    if result[:success]
+      log_action("Registrou pagamento", { 
+        aluno_id: params['aluno_id'], 
+        valor: params['valor_pago'],
+        payment_id: result[:payment_id]
+      })
+      session[:mensagem_sucesso] = result[:message]
+    else
+      session[:mensagem_erro] = result[:message]
+    end
+    
     redirect "/alunos/#{params['aluno_id']}"
   rescue => e
     logger.error("Erro ao registrar pagamento: #{e.message}")
@@ -720,6 +1111,14 @@ end
 
 # Rotas para graduações
 post '/graduacoes' do
+  erros = validar_graduacao(params)
+  
+  if erros.any?
+    session[:mensagem_erro] = erros.join(", ")
+    redirect "/alunos/#{params['aluno_id']}"
+    return
+  end
+  
   begin
     Aluno.registrar_graduacao(
       params['aluno_id'], 

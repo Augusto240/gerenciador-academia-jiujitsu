@@ -1,42 +1,29 @@
+<% presenter = AlunoPresenter.new(@aluno) %>
+
 <header>
-  <h1>Detalhes de: <%= h @aluno['nome'] %></h1>
+  <h1>Detalhes de: <%= h presenter.nome %></h1>
   <a href="/" class="btn-voltar">Voltar para a Lista</a>
 </header>
 
 <div class="aluno-detalhes-grid">
-
   <section class="card">
     <h2>Dados Cadastrais</h2>
-    <p><strong>Nome:</strong> <%= h @aluno['nome'] %></p>
-    <p><strong>Status:</strong> <%= @aluno['bolsista'] ? 'Bolsista' : 'Pagante' %></p>
-    <p><strong>Data de Nascimento:</strong>
-      <% if @aluno['data_nascimento'] && !@aluno['data_nascimento'].empty? %>
-        <% dn = Date.parse(@aluno['data_nascimento']) rescue nil %>
-        <%= dn ? dn.strftime('%d/%m/%Y') : 'Inválida' %>
-      <% else %>
-        N/A
-      <% end %>
-    </p>
-    <p><strong>Faixa Atual:</strong> <%= h @aluno['cor_faixa'] %></p>
-    <p><strong>Turma:</strong> <%= h @aluno['turma'] %></p>
+    <p><strong>Nome:</strong> <%= h presenter.nome %></p>
+    <p><strong>Status:</strong> <%= h presenter.status %></p>
+    <p><strong>Data de Nascimento:</strong> <%= h presenter.data_nascimento_formatada %></p>
+    <p><strong>Idade:</strong> <%= h presenter.idade %> anos</p>
+    <p><strong>Faixa Atual:</strong> <%= h presenter.cor_faixa %></p>
+    <p><strong>Turma:</strong> <%= h presenter.turma %></p>
     <br>
-    <a href="/alunos/<%= @aluno['id'] %>/editar" class="btn-editar">Editar Dados</a>
+    <a href="/alunos/<%= presenter.id %>/editar" class="btn-editar">Editar Dados</a>
   </section>
   
   <section class="card">
     <h2>Anamnese</h2>
-    <p><strong>Problema de saúde:</strong>
-      <%= @aluno['saude_problema'].to_s.strip.empty? ? 'Não informado' : h(@aluno['saude_problema']) %>
-    </p>
-    <p><strong>Uso de medicação:</strong>
-      <%= @aluno['saude_medicacao'].to_s.strip.empty? ? 'Não informado' : h(@aluno['saude_medicacao']) %>
-    </p>
-    <p><strong>Histórico de lesões:</strong>
-      <%= @aluno['saude_lesao'].to_s.strip.empty? ? 'Não informado' : h(@aluno['saude_lesao']) %>
-    </p>
-    <p><strong>Uso de substâncias:</strong>
-      <%= @aluno['saude_substancia'].to_s.strip.empty? ? 'Não informado' : h(@aluno['saude_substancia']) %>
-    </p>
+    <p><strong>Problema de saúde:</strong> <%= h presenter.problema_saude %></p>
+    <p><strong>Uso de medicação:</strong> <%= h presenter.uso_medicacao %></p>
+    <p><strong>Histórico de lesões:</strong> <%= h presenter.historico_lesoes %></p>
+    <p><strong>Uso de substâncias:</strong> <%= h presenter.uso_substancias %></p>
   </section>
 
   <section class="card">
