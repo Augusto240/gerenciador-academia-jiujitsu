@@ -4,7 +4,7 @@ set -o errexit
 
 bundle install
 
-# Inicializar banco de dados com a estrutura (schema)
+# --- INÍCIO DA MIGRAÇÃO AUTOMÁTICA ---
 echo "Inicializando banco de dados com a estrutura (schema)..."
 psql $DATABASE_URL < initdb/10_schema.sql
 
@@ -16,11 +16,9 @@ if [ -f "$PROD_DATA_FILE" ]; then
   echo "Arquivo de dados de produção encontrado. Inserindo dados..."
   psql $DATABASE_URL < "$PROD_DATA_FILE"
 else
-  echo "Nenhum arquivo de dados de produção encontrado. Pulando a inserção de dados."
+  echo "Nenhum arquivo de dados de produção encontrado. Usando dados de exemplo."
+  psql $DATABASE_URL < initdb/20_data.sql
 fi
-
-# NOVA LINHA: Criar usuário administrador
-echo "Criando usuário administrador..."
-bundle exec ruby bin/create_admin.rb
+# --- FIM DA MIGRAÇÃO AUTOMÁTICA ---
 
 echo "Build finalizado com sucesso!"
