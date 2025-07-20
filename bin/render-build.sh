@@ -19,8 +19,12 @@ else
   echo "Nenhum arquivo de dados de produção encontrado. Pulando a inserção de dados."
 fi
 
-# NOVA LINHA: Criar usuário administrador
+# Criar usuário administrador
 echo "Criando usuário administrador..."
 bundle exec ruby bin/create_admin.rb
+
+# NOVA LINHA: Resetar a senha do administrador
+echo "Resetando senha do administrador..."
+bundle exec ruby bin/reset_admin_password.rb
 
 echo "Build finalizado com sucesso!"
