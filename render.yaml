@@ -2,6 +2,7 @@ services:
   - type: web
     name: gerenciador-academia
     env: ruby
+    plan: free  # linha para especificar o plano gratuito
     buildCommand: "./bin/render-build.sh"
     startCommand: "bundle exec puma -p $PORT"
     envVars:
