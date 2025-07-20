@@ -40,19 +40,13 @@ end
 # Pool de conexões para o banco de dados (otimizado)
 DB_POOL = ConnectionPool.new(size: DB_POOL_SIZE, timeout: 5) do
   connection_params = if ENV['DATABASE_URL']
-    ENV['DATABASE_URL']
+    ENV['DATABASE_URL']  # Usado pelo Render
   else
     {
       host: ENV.fetch('DATABASE_HOST', 'db'),
       user: ENV.fetch('DATABASE_USER', 'jiujitsu_user'),
       password: ENV.fetch('DATABASE_PASSWORD', 'senha_forte_123'),
-      dbname: ENV.fetch('DATABASE_NAME', 'academia_jiujitsu_dev'),
-      # Parâmetros que melhoram a performance
-      connect_timeout: 5,
-      keepalives: 1,
-      keepalives_idle: 30,
-      keepalives_interval: 10,
-      keepalives_count: 3
+      dbname: ENV.fetch('DATABASE_NAME', 'academia_jiujitsu_dev')
     }
   end
   
