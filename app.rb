@@ -10,7 +10,12 @@ require 'puma'
 
 use Rack::MethodOverride
 enable :sessions
-set :session_secret, ENV.fetch('SESSION_SECRET') { "uma_chave_super_secreta_e_aleatoria_para_desenvolvimento_muito_muito_longa_e_segura_12345678901234" }
+session_secret = ENV.fetch('SESSION_SECRET') { "uma_chave_super_secreta_e_aleatoria_para_desenvolvimento_muito_muito_longa_e_segura_12345678901234" }
+# Garantir que a chave tem pelo menos 64 caracteres
+if session_secret.length < 64
+  session_secret = session_secret.ljust(64, 'x')
+end
+set :session_secret, session_secret
 
 # ========================================
 # CONSTANTES E CONFIGURAÇÃO
