@@ -1131,8 +1131,9 @@ end
 
 # Rotas para alunos
 get '/' do
+  # Aumentar o valor de por_pagina para mostrar todos os alunos
   pagina = params[:pagina]&.to_i || 1
-  por_pagina = params[:por_pagina]&.to_i || 20
+  por_pagina = params[:por_pagina]&.to_i || 1000 
   
   result = Aluno.buscar_com_filtros(
     {
