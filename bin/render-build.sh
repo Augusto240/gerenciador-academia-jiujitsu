@@ -2,14 +2,19 @@
 # exit on error
 set -o errexit
 
-# Instalar dependências
 bundle install
 
-# Criar diretório de logs
-mkdir -p logs
+# --- INÍCIO DA MIGRAÇÃO AUTOMÁTICA ---
+echo "Inicializando banco de dados com a estrutura (schema)..."
+psql $DATABASE_URL < initdb/10_schema.sql
 
-# Criar tabelas no banco de dados
-echo "Inicializando banco de dados com esquema..."
-cat ./initdb/10_schema.sql | bundle exec ruby -e "require 'pg'; conn = PG.connect(ENV['DATABASE_URL']); puts conn.exec(STDIN.read).inspect"
+# Verifica se o arquivo de dados de produção existe (como um Secret File)
+if [ -f "initdb/30_production_data.sql" ]; then
+  echo "Arquivo de dados de produção encontrado. Inserindo dados..."
+  psql $DATABASE_URL < initdb/30_production_data.sql
+else
+  echo "Nenhum arquivo de dados de produção encontrado. Pulando a inserção de dados."
+fi
+# --- FIM DA MIGRAÇÃO AUTOMÁTICA ---
 
-echo "Banco de dados inicializado com sucesso!"
+echo "Build finalizado com sucesso!"
