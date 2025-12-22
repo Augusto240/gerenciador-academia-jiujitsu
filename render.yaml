@@ -1,9 +1,10 @@
 services:
   - type: web
-    name: academia-jiujitsu
+    name: gerenciador-academia
     env: ruby
+    plan: free  # linha para especificar o plano gratuito
     buildCommand: "./bin/render-build.sh"
-    startCommand: "bundle exec puma -C config/puma.rb"
+    startCommand: "bundle exec puma -p $PORT"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -11,11 +12,13 @@ services:
           property: connectionString
       - key: RACK_ENV
         value: production
-      - key: RAILS_MASTER_KEY
-        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        generateValue: true
 
 databases:
   - name: academia-db
-    databaseName: academia_jiujitsu_prod
+    databaseName: academia_jiujitsu
     user: jiujitsu_user
     plan: free

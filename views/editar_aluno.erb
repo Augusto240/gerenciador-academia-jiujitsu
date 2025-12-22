@@ -6,14 +6,25 @@
 <section class="card form-section">
   <h2>Dados do Aluno</h2>
   <form action="/alunos/<%= @aluno['id'] %>" method="POST">
+    <%= csrf_tag %>
     <input type="hidden" name="_method" value="PUT">
 
     <label for="nome">Nome:</label>
     <input type="text" id="nome" name="nome" value="<%= @aluno['nome'] %>" required>
 
+    <label for="modalidade">Modalidade:</label>
+    <select name="modalidade" id="modalidade" onchange="atualizarFaixas()">
+      <% @modalidades.each do |mod| %>
+        <option value="<%= mod %>" <%= 'selected' if @aluno['modalidade'] == mod %>>
+          <%= mod %>
+        </option>
+      <% end %>
+    </select>
+
     <label for="cor_faixa">Cor da Faixa:</label>
     <select name="cor_faixa" id="cor_faixa">
-      <% @faixas.each do |faixa| %>
+      <% faixas_atuais = @aluno['modalidade'] == 'Muay Thai' ? @faixas_muay_thai : @faixas %>
+      <% faixas_atuais.each do |faixa| %>
         <option value="<%= faixa %>" <%= 'selected' if @aluno['cor_faixa'] == faixa %>>
           <%= faixa %>
         </option>
@@ -54,4 +65,25 @@
 
     <button type="submit" class="btn-salvar">Salvar Alterações</button>
   </form>
+
+  <script>
+    const faixasJiuJitsu = <%= @faixas.to_json %>;
+    const faixasMuayThai = <%= @faixas_muay_thai.to_json %>;
+    const faixaAtual = "<%= @aluno['cor_faixa'] %>";
+    
+    function atualizarFaixas() {
+      const modalidade = document.getElementById('modalidade').value;
+      const selectFaixa = document.getElementById('cor_faixa');
+      const faixas = modalidade === 'Muay Thai' ? faixasMuayThai : faixasJiuJitsu;
+      
+      selectFaixa.innerHTML = '';
+      faixas.forEach(faixa => {
+        const option = document.createElement('option');
+        option.value = faixa;
+        option.textContent = faixa;
+        if (faixa === faixaAtual) option.selected = true;
+        selectFaixa.appendChild(option);
+      });
+    }
+  </script>
 </section>

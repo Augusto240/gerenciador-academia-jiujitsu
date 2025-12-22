@@ -1,0 +1,77 @@
+<header>
+  <h1>Cadastrar Novo Aluno</h1>
+  <a href="/" class="btn-voltar">Voltar para a Lista</a>
+</header>
+
+<section class="card form-section">
+  <h2>Dados do Aluno</h2>
+  <form action="/alunos" method="POST">
+    <%= csrf_tag %>
+    <label for="nome">Nome:</label>
+    <input type="text" id="nome" name="nome" required>
+
+    <label for="modalidade">Modalidade:</label>
+    <select name="modalidade" id="modalidade" onchange="atualizarFaixas()">
+      <% @modalidades.each do |mod| %>
+        <option value="<%= mod %>"><%= mod %></option>
+      <% end %>
+    </select>
+
+    <label for="cor_faixa">Cor da Faixa:</label>
+    <select name="cor_faixa" id="cor_faixa">
+      <% @faixas.each do |faixa| %>
+        <option value="<%= faixa %>"><%= faixa %></option>
+      <% end %>
+    </select>
+
+    <label for="data_nascimento">Data de Nascimento:</label>
+    <input type="date" id="data_nascimento" name="data_nascimento">
+
+    <label for="turma">Turma:</label>
+    <select name="turma" id="turma">
+      <% @turmas.each do |turma| %>
+        <option value="<%= turma %>"><%= turma %></option>
+      <% end %>
+    </select>
+
+    <div class="checkbox-container">
+      <input type="checkbox" id="bolsista" name="bolsista">
+      <label for="bolsista">Bolsista?</label>
+    </div>
+
+    <h3>Informações de Saúde (opcional)</h3>
+
+    <label for="saude_problema">Problema de Saúde:</label>
+    <input type="text" id="saude_problema" name="saude_problema">
+
+    <label for="saude_medicacao">Uso de Medicação:</label>
+    <input type="text" id="saude_medicacao" name="saude_medicacao">
+
+    <label for="saude_lesao">Histórico de Lesões:</label>
+    <input type="text" id="saude_lesao" name="saude_lesao">
+
+    <label for="saude_substancia">Uso de Substâncias:</label>
+    <input type="text" id="saude_substancia" name="saude_substancia">
+
+    <button type="submit" class="btn-salvar">Cadastrar Aluno</button>
+  </form>
+
+  <script>
+    const faixasJiuJitsu = <%= @faixas.to_json %>;
+    const faixasMuayThai = <%= @faixas_muay_thai.to_json %>;
+    
+    function atualizarFaixas() {
+      const modalidade = document.getElementById('modalidade').value;
+      const selectFaixa = document.getElementById('cor_faixa');
+      const faixas = modalidade === 'Muay Thai' ? faixasMuayThai : faixasJiuJitsu;
+      
+      selectFaixa.innerHTML = '';
+      faixas.forEach(faixa => {
+        const option = document.createElement('option');
+        option.value = faixa;
+        option.textContent = faixa;
+        selectFaixa.appendChild(option);
+      });
+    }
+  </script>
+</section>

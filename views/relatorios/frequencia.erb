@@ -1,0 +1,38 @@
+<header>
+  <h1>Relatório de Frequência</h1>
+  <p>Período: <%= @periodo[:inicio].strftime('%d/%m/%Y') %> a <%= @periodo[:fim].strftime('%d/%m/%Y') %></p>
+  <div class="actions">
+    <a href="/relatorios" class="btn-voltar">Voltar para Relatórios</a>
+    <a href="/relatorios/frequencia?inicio=<%= @periodo[:inicio].strftime('%Y-%m-%d') %>&fim=<%= @periodo[:fim].strftime('%Y-%m-%d') %>&formato=csv" class="btn-exportar">Exportar CSV</a>
+  </div>
+</header>
+
+<div class="card">
+  <table class="relatorio-table">
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>Presenças</th>
+        <th>Faltas</th>
+        <th>Total de Aulas</th>
+        <th>Taxa de Frequência</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @relatorio.each do |r| %>
+        <tr>
+          <td><a href="/alunos/<%= r[:aluno_id] %>"><%= h r[:nome] %></a></td>
+          <td><%= r[:presencas] %></td>
+          <td><%= r[:faltas] %></td>
+          <td><%= r[:total_aulas] %></td>
+          <td>
+            <div class="progress-bar">
+              <div class="progress" style="width: <%= r[:taxa_frequencia] %>%"></div>
+              <span><%= r[:taxa_frequencia] %>%</span>
+            </div>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

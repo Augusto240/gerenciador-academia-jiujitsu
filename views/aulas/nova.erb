@@ -1,9 +1,10 @@
 <header>
-  <h1>Aulas e Presença</h1>
+  <h1>Registrar Nova Aula</h1>
+  <a href="/aulas" class="btn-voltar">Voltar para a Lista</a>
 </header>
 
 <section class="card form-section">
-  <h2>Registrar Nova Aula</h2>
+  <h2>Detalhes da Aula</h2>
   <form action="/aulas" method="POST">
     <%= csrf_tag %>
     <label for="data_aula">Data da Aula:</label>
@@ -50,12 +51,10 @@
       const todasTurmasContainer = document.getElementById('todas-turmas-container');
       
       if (modalidade === 'Muay Thai') {
-        // Muay Thai tem turma única, esconder seleção e marcar automaticamente
         turmaContainer.style.display = 'none';
         todasTurmasContainer.style.display = 'none';
         selectTurma.innerHTML = '<option value="Muay Thai" selected>Muay Thai</option>';
       } else {
-        // Jiu Jitsu tem várias turmas
         turmaContainer.style.display = 'block';
         todasTurmasContainer.style.display = 'flex';
         selectTurma.innerHTML = '<option value="">— Escolha uma turma —</option>';
@@ -68,35 +67,4 @@
       }
     }
   </script>
-</section>
-
-<section class="list-section card">
-  <h2>Aulas Registradas</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Data</th>
-        <th>Modalidade</th>
-        <th>Turma</th>
-        <th>Descrição</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @aulas.each do |aula| %>
-        <% da = aula['data_aula'].is_a?(String) ? Date.parse(aula['data_aula']) : aula['data_aula'] %>
-        <tr>
-          <td><%= da.strftime('%d/%m/%Y') %></td>
-          <td><%= h(aula['modalidade'] || 'Jiu Jitsu') %></td>
-          <td><%= h(aula['turma'] || '—') %></td>
-          <td><%= h aula['descricao'] %></td>
-          <td>
-            <a href="/aulas/<%= aula['id'] %>" class="btn-editar">
-              Ver / Editar Presença
-            </a>
-          </td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
 </section>

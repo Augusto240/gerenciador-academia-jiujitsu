@@ -1,0 +1,57 @@
+<header>
+  <h1>Relatório de Mensalidades</h1>
+  <p>Gerado em: <%= Date.today.strftime('%d/%m/%Y') %></p>
+  <div class="actions">
+    <a href="/relatorios" class="btn-voltar">Voltar para Relatórios</a>
+    <a href="/relatorios/mensalidades?formato=csv" class="btn-exportar">Exportar CSV</a>
+  </div>
+</header>
+
+<div class="card">
+  <div class="resumo-mensalidades">
+    <% em_dia = @relatorio.count { |r| r[:status] == 'Em Dia' } %>
+    <% atrasados = @relatorio.count { |r| r[:status] == 'Atrasado' } %>
+    <% pendentes = @relatorio.count { |r| r[:status] == 'Pendente' } %>
+    
+    <div class="resumo-item">
+      <span class="status-em-dia">Em dia: <%= em_dia %></span>
+    </div>
+    <div class="resumo-item">
+      <span class="status-atrasado">Atrasados: <%= atrasados %></span>
+    </div>
+    <div class="resumo-item">
+      <span class="status-pendente">Pendentes: <%= pendentes %></span>
+    </div>
+  </div>
+
+  <table class="relatorio-table">
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>Modalidade</th>
+        <th>Valor</th>
+        <th>Status</th>
+        <th>Último Pagamento</th>
+        <th>Dias Atraso</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @relatorio.each do |r| %>
+        <tr>
+          <td><a href="/alunos/<%= r[:aluno_id] %>"><%= h r[:nome] %></a></td>
+          <td><%= h r[:modalidade] %></td>
+          <td>R$ <%= '%.2f' % r[:valor_mensalidade] %></td>
+          <td>
+            <span class="status-mensalidade <%= r[:cor_status] %>"><%= r[:status] %></span>
+          </td>
+          <td><%= r[:ultimo_pagamento] %></td>
+          <td><%= r[:dias_atraso] > 0 ? "#{r[:dias_atraso]} dias" : '-' %></td>
+          <td>
+            <a href="/alunos/<%= r[:aluno_id] %>" class="btn-small">Ver Aluno</a>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
