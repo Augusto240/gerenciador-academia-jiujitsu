@@ -14,8 +14,11 @@ require 'rack/attack'
 use Rack::MethodOverride
 
 # Configuração de Session Secret segura
+# Sinatra exige secret com pelo menos 64 caracteres
 session_secret = if ENV['RACK_ENV'] == 'production'
-  ENV.fetch('SESSION_SECRET') { raise "SESSION_SECRET não configurada em produção!" }
+  secret = ENV.fetch('SESSION_SECRET') { raise "SESSION_SECRET não configurada em produção!" }
+  # Se o secret for menor que 64 caracteres, expandir usando SHA256
+  secret.length >= 64 ? secret : Digest::SHA256.hexdigest(secret + "academia_salt_2024")
 else
   ENV.fetch('SESSION_SECRET') { SecureRandom.hex(64) }
 end
