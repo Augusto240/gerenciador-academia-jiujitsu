@@ -2,9 +2,19 @@
 require 'pg'
 require 'bcrypt'
 
-# Conectar ao banco de dados
-db_url = ENV['DATABASE_URL'] || 'postgres://jiujitsu_user:senha_forte_123@localhost:5433/academia_jiujitsu_dev'
-conn = PG.connect(db_url)
+# Conexão inteligente: Usa DATABASE_URL se existir (Render), 
+# senão usa as variáveis do Docker Compose (Desenvolvimento Local)
+if ENV['DATABASE_URL']
+  conn = PG.connect(ENV['DATABASE_URL'])
+else
+  conn = PG.connect(
+    host: ENV.fetch('DATABASE_HOST', 'db'),
+    user: ENV.fetch('DATABASE_USER', 'jiujitsu_user'),
+    password: ENV.fetch('DATABASE_PASSWORD', 'senha_forte_123'),
+    dbname: ENV.fetch('DATABASE_NAME', 'academia_jiujitsu_dev'),
+    port: 5432 # Porta interna padrão do Postgres
+  )
+end
 
 # Criar uma nova senha hash
 nova_senha = "admin123"

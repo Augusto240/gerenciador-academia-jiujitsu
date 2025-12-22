@@ -71,3 +71,14 @@ CREATE TABLE presencas (
   presente BOOLEAN DEFAULT FALSE,
   UNIQUE(aluno_id, aula_id)
 );
+
+-- Tabela de Notificações
+CREATE TABLE notificacoes (
+  id SERIAL PRIMARY KEY,
+  titulo VARCHAR(255) NOT NULL,
+  mensagem TEXT,
+  tipo VARCHAR(50) DEFAULT 'info',
+  lida BOOLEAN DEFAULT FALSE,
+  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  lida_em TIMESTAMP
+);
