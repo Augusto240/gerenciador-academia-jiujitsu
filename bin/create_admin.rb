@@ -1,16 +1,21 @@
 #!/usr/bin/env ruby
 require 'pg'
 require 'bcrypt'
+require 'securerandom'
 
 # Conectar ao banco de dados
-# Em produção, usar variáveis de ambiente
-if ENV['RACK_ENV'] == 'production'
-  db_url = ENV.fetch('DATABASE_URL') { raise "DATABASE_URL não configurada!" }
-  admin_password = ENV.fetch('ADMIN_PASSWORD') { raise "ADMIN_PASSWORD não configurada!" }
-else
-  db_url = ENV['DATABASE_URL'] || 'postgres://jiujitsu_user:senha_forte_123@localhost:5433/academia_jiujitsu_dev'
-  admin_password = ENV.fetch('ADMIN_PASSWORD', 'admin123')
+db_url = ENV['DATABASE_URL']
+
+unless db_url
+  if ENV['RACK_ENV'] == 'production'
+    raise "DATABASE_URL não configurada!"
+  else
+    db_url = 'postgres://jiujitsu_user:senha_forte_123@localhost:5433/academia_jiujitsu_dev'
+  end
 end
+
+# Senha do admin - em produção usar variável de ambiente ou gerar uma aleatória
+admin_password = ENV['ADMIN_PASSWORD'] || (ENV['RACK_ENV'] == 'production' ? SecureRandom.hex(16) : 'admin123')
 
 conn = PG.connect(db_url)
 
