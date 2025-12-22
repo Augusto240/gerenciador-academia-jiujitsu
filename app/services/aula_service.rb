@@ -4,22 +4,34 @@ module AulaService
     
     begin
       with_db do |client|
-        turma_aula = params['turma'].empty? ? nil : params['turma']
+        modalidade = params['modalidade'] || 'Jiu Jitsu'
+        turma_aula = params['turma'].to_s.empty? ? nil : params['turma']
         todas_turmas = params['todas_turmas'] == 'on'
 
+        # Para Muay Thai, a turma é sempre "Muay Thai"
+        if modalidade == 'Muay Thai'
+          turma_aula = 'Muay Thai'
+        end
+
         insert_result = client.exec_params(
-          "INSERT INTO aulas (data_aula, turma, descricao) VALUES ($1, $2, $3) RETURNING id",
-          [params['data_aula'], turma_aula, params['descricao']]
+          "INSERT INTO aulas (data_aula, modalidade, turma, descricao) VALUES ($1, $2, $3, $4) RETURNING id",
+          [params['data_aula'], modalidade, turma_aula, params['descricao']]
         ).first
         aula_id = insert_result['id']
 
-        # Selecionar alunos para a lista de presença
-        alunos_q = if todas_turmas
-          client.exec("SELECT id FROM alunos")
+        # Selecionar alunos para a lista de presença baseado na modalidade
+        alunos_q = if modalidade == 'Muay Thai'
+          # Para Muay Thai, pegar todos os alunos dessa modalidade
+          client.exec_params("SELECT id FROM alunos WHERE modalidade = $1", [modalidade])
+        elsif todas_turmas
+          # Para Jiu Jitsu com todas as turmas
+          client.exec_params("SELECT id FROM alunos WHERE modalidade = $1", ['Jiu Jitsu'])
         elsif turma_aula
-          client.exec_params("SELECT id FROM alunos WHERE turma = $1", [turma_aula])
+          # Para uma turma específica de Jiu Jitsu
+          client.exec_params("SELECT id FROM alunos WHERE turma = $1 AND modalidade = $2", [turma_aula, 'Jiu Jitsu'])
         else
-          client.exec("SELECT id FROM alunos")
+          # Fallback: todos os alunos de Jiu Jitsu
+          client.exec_params("SELECT id FROM alunos WHERE modalidade = $1", ['Jiu Jitsu'])
         end
 
         # Inicializar presenças em massa

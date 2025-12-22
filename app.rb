@@ -40,6 +40,7 @@ MODALIDADES = ['Jiu Jitsu', 'Muay Thai']
 FAIXAS = ['Branca', 'Cinza/Branca', 'Cinza', 'Cinza/Preta', 'Amarela/Branca', 'Amarela', 'Amarela/Preta', 'Laranja/Branca', 'Laranja', 'Laranja/Preta', 'Verde/Branca', 'Verde', 'Verde/Preta', 'Azul', 'Roxa', 'Marrom', 'Preta']
 FAIXAS_MUAY_THAI = ['Sem graduação', 'Branca', 'Amarela', 'Laranja', 'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta', 'Preta e Vermelha']
 TURMAS = ['Kids 2 a 3 anos', 'Kids', 'Adolescentes/Juvenil', 'Adultos', 'Feminino', 'Master/Sênior']
+TURMAS_MUAY_THAI = ['Muay Thai']  # Turma única para Muay Thai
 
 # 3. Carregar Módulos da Aplicação (Ordem importa!)
 # Helpers e Validações
@@ -384,6 +385,8 @@ end
 get '/aulas' do
   @aulas = Aula.todas
   @turmas = TURMAS
+  @turmas_muay_thai = TURMAS_MUAY_THAI
+  @modalidades = MODALIDADES
   erb :'aulas/index'
 end
 
@@ -417,6 +420,8 @@ end
 # Rota para o formulário de nova aula
 get '/aulas/nova' do
   @turmas = TURMAS
+  @turmas_muay_thai = TURMAS_MUAY_THAI
+  @modalidades = MODALIDADES
   erb :'aulas/nova'
 end
 

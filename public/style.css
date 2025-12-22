@@ -49,15 +49,16 @@ header {
 header h1 {
     color: var(--cor-primaria);
     font-size: 2.5em;
-    margin: 0;
+    margin: 0 0 15px 0;
 }
 
 .main-nav {
     display: flex;
     justify-content: center;
-    gap: 15px;
-    background-color: var(--cor-surface);
-    padding: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+    background-color: var(--cor-primaria);
+    padding: 15px 20px;
     border-radius: 8px;
     box-shadow: var(--sombra-card);
     margin-bottom: 30px;
@@ -65,16 +66,15 @@ header h1 {
 
 .main-nav a {
     text-decoration: none;
-    color: var(--cor-texto);
+    color: #ffffff;
     font-weight: 500;
-    padding: 10px 20px;
+    padding: 10px 18px;
     border-radius: 6px;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: background-color 0.2s ease;
 }
 
 .main-nav a:hover {
-    background-color: var(--cor-primaria);
-    color: white;
+    background-color: rgba(255, 255, 255, 0.2);
 }
 
 
@@ -309,9 +309,21 @@ tbody tr:hover {
 }
 
 td.actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    white-space: nowrap;
+}
+
+td.actions a,
+td.actions form,
+td.actions button {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+}
+
+td.actions form {
+    display: inline;
+    margin: 0;
+    padding: 0;
 }
 
 td a {
@@ -443,6 +455,30 @@ footer a:hover {
   text-decoration: underline;
 }
 
+/* ========================================= */
+/* ==   PÁGINA DE LOGIN                   == */
+/* ========================================= */
+.login-container {
+    max-width: 400px;
+    width: 100%;
+    padding: 40px;
+    background-color: var(--cor-surface);
+    border: 1px solid var(--cor-borda);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    text-align: center;
+}
+
+.login-container .logo {
+    max-width: 100px;
+    margin-bottom: 20px;
+}
+
+.login-container h1 {
+    margin-bottom: 25px;
+    font-size: 1.6em;
+}
+
 /* Estilos do Dashboard */
 .dashboard-grid {
   display: grid;
@@ -547,6 +583,7 @@ footer a:hover {
 
 .dashboard-card {
   background-color: var(--cor-surface, white);
+  border: 1px solid var(--cor-borda);
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -565,12 +602,12 @@ footer a:hover {
   margin-top: 15px;
 }
 
-.status-em-dia {
+.dashboard-status-em-dia {
   color: #28a745;
   font-weight: bold;
 }
 
-.status-atrasado {
+.dashboard-status-atrasado {
   color: #dc3545;
   font-weight: bold;
 }
@@ -753,7 +790,9 @@ footer a:hover {
 .actions {
   display: flex;
   gap: 10px;
-  margin-bottom: 20px;
+  margin: 15px 0 20px 0;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .btn-exportar {
@@ -793,12 +832,13 @@ footer a:hover {
 
 /* Link de Logout no nav */
 .nav-logout {
-    color: var(--cor-erro) !important;
+    background-color: var(--cor-erro);
+    color: white !important;
     margin-left: auto;
 }
 
 .nav-logout:hover {
-    background-color: var(--cor-erro) !important;
+    background-color: #c82333 !important;
     color: white !important;
 }
 

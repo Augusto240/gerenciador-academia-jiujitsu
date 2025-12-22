@@ -9,18 +9,27 @@
     <label for="data_aula">Data da Aula:</label>
     <input type="date" name="data_aula" value="<%= Date.today.strftime('%Y-%m-%d') %>" required>
 
-    <label for="descricao">Descrição (opcional):</label>
-    <input type="text" name="descricao" placeholder="Ex: Treino de Passagem de Guarda">
-
-    <label for="turma">Para qual turma?</label>
-    <select name="turma" id="turma">
-      <option value="">— Escolha uma turma —</option>
-      <% @turmas.each do |t| %>
-        <option value="<%= t %>"><%= t %></option>
+    <label for="modalidade_aula">Modalidade:</label>
+    <select name="modalidade" id="modalidade_aula" onchange="atualizarTurmasAula()">
+      <% @modalidades.each do |mod| %>
+        <option value="<%= mod %>"><%= mod %></option>
       <% end %>
     </select>
 
-    <div class="checkbox-container">
+    <label for="descricao">Descrição (opcional):</label>
+    <input type="text" name="descricao" placeholder="Ex: Treino de Passagem de Guarda">
+
+    <div id="turma-container">
+      <label for="turma">Para qual turma?</label>
+      <select name="turma" id="turma">
+        <option value="">— Escolha uma turma —</option>
+        <% @turmas.each do |t| %>
+          <option value="<%= t %>"><%= t %></option>
+        <% end %>
+      </select>
+    </div>
+
+    <div class="checkbox-container" id="todas-turmas-container">
       <input type="checkbox" id="todas_turmas" name="todas_turmas">
       <label for="todas_turmas">
         Registrar presença para <strong>todos</strong> os alunos (independente da turma)
@@ -29,4 +38,32 @@
 
     <button type="submit">Criar Aula e Abrir Lista de Presença</button>
   </form>
+
+  <script>
+    const turmasJiuJitsu = <%= @turmas.to_json %>;
+    const turmasMuayThai = <%= @turmas_muay_thai.to_json %>;
+    
+    function atualizarTurmasAula() {
+      const modalidade = document.getElementById('modalidade_aula').value;
+      const selectTurma = document.getElementById('turma');
+      const turmaContainer = document.getElementById('turma-container');
+      const todasTurmasContainer = document.getElementById('todas-turmas-container');
+      
+      if (modalidade === 'Muay Thai') {
+        turmaContainer.style.display = 'none';
+        todasTurmasContainer.style.display = 'none';
+        selectTurma.innerHTML = '<option value="Muay Thai" selected>Muay Thai</option>';
+      } else {
+        turmaContainer.style.display = 'block';
+        todasTurmasContainer.style.display = 'flex';
+        selectTurma.innerHTML = '<option value="">— Escolha uma turma —</option>';
+        turmasJiuJitsu.forEach(turma => {
+          const option = document.createElement('option');
+          option.value = turma;
+          option.textContent = turma;
+          selectTurma.appendChild(option);
+        });
+      }
+    }
+  </script>
 </section>

@@ -60,6 +60,7 @@ CREATE TABLE graduacoes (
 CREATE TABLE aulas (
   id SERIAL PRIMARY KEY,
   data_aula DATE NOT NULL,
+  modalidade VARCHAR(50) DEFAULT 'Jiu Jitsu',
   turma VARCHAR(50),
   descricao VARCHAR(255)
 );
