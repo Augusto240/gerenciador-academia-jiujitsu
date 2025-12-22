@@ -1,12 +1,14 @@
 -- Garante uma recriação limpa
-DROP TABLE IF EXISTS presencas, aulas, graduacoes, pagamentos, assinaturas, planos, usuarios, alunos CASCADE;
+DROP TABLE IF EXISTS presencas, aulas, graduacoes, pagamentos, assinaturas, planos, usuarios, alunos, notificacoes CASCADE;
 
 -- Tabela de Usuários do Sistema
 CREATE TABLE usuarios (
   id SERIAL PRIMARY KEY,
   email VARCHAR(255) UNIQUE NOT NULL,
   password_digest VARCHAR(255) NOT NULL,
-  nome VARCHAR(100)
+  nome VARCHAR(100),
+  admin BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Tabela principal de Alunos

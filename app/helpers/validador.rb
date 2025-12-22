@@ -17,7 +17,12 @@ module Validador
       erros << "Faixa inválida" unless FAIXAS.include?(params['cor_faixa'])
     end
     
-    erros << "Turma inválida" unless TURMAS.include?(params['turma'])
+    # Validação de turma de acordo com a modalidade
+    if modalidade == 'Muay Thai'
+      erros << "Turma inválida para Muay Thai" unless params['turma'].to_s.empty? || TURMAS_MUAY_THAI.include?(params['turma'])
+    else
+      erros << "Turma inválida" unless params['turma'].to_s.empty? || TURMAS.include?(params['turma'])
+    end
     
     # Validação de data de nascimento
     if params['data_nascimento'] && !params['data_nascimento'].empty?
@@ -59,7 +64,8 @@ module Validador
       end
     end
     
-    erros << "Turma inválida" if !params['turma'].empty? && !TURMAS.include?(params['turma'])
+    turmas_validas = TURMAS + TURMAS_MUAY_THAI
+    erros << "Turma inválida" if !params['turma'].to_s.empty? && !turmas_validas.include?(params['turma'])
     
     if params['descricao'] && params['descricao'].length > 255
       erros << "Descrição não deve exceder 255 caracteres"
@@ -102,8 +108,9 @@ module Validador
     erros << "Faixa é obrigatória" if params['faixa'].to_s.strip.empty?
     erros << "Data da graduação é obrigatória" if params['data_graduacao'].to_s.strip.empty?
     
-    if params['faixa'] && !FAIXAS.include?(params['faixa'])
-      erros << "Faixa inválida"
+    if params['faixa']
+      faixas_validas = FAIXAS + FAIXAS_MUAY_THAI
+      erros << "Faixa inválida" unless faixas_validas.include?(params['faixa'])
     end
     
     if params['data_graduacao'] && !params['data_graduacao'].empty?

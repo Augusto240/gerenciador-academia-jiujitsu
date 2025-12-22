@@ -1,4 +1,9 @@
 class Aluno
+  # Sanitiza caracteres especiais do LIKE para evitar wildcards maliciosos
+  def self.sanitize_like(value)
+    value.to_s.gsub(/[%_\\]/) { |c| "\\#{c}" }
+  end
+
   def self.todos
     with_db do |client|
       client.exec("SELECT * FROM alunos ORDER BY nome").to_a
@@ -7,7 +12,7 @@ class Aluno
 
   def self.buscar_por_id(id)
     with_db do |client|
-      client.exec_params("SELECT * FROM alunos WHERE id = $1", [id]).first
+      client.exec_params("SELECT * FROM alunos WHERE id = $1", [id.to_i]).first
     end
   end
 
@@ -23,7 +28,7 @@ class Aluno
 
       if filtros[:busca] && !filtros[:busca].empty?
         conditions << "nome ILIKE $#{param_count}"
-        params_list << "%#{filtros[:busca]}%"
+        params_list << "%#{sanitize_like(filtros[:busca])}%"
         param_count += 1
       end
 

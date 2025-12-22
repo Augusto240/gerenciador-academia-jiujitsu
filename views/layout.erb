@@ -43,7 +43,10 @@
             <a href="/">Alunos</a>
             <a href="/aulas">Aulas e Presença</a>
             <a href="/relatorios">Relatórios</a>
-            <a href="/logout" class="nav-logout">Sair</a>
+            <form action="/logout" method="POST" style="display: inline; margin: 0;">
+              <%= csrf_tag %>
+              <button type="submit" class="nav-logout">Sair</button>
+            </form>
         </nav>
         
         <% if session[:mensagem_sucesso] %>
@@ -69,8 +72,8 @@
         Desenvolvido por <strong>José Augusto de Oliveira Neto</strong>.
       </p>
       <p>
-        <a href="https://github.com/Augusto240/gerenciador-academia-jiujitsu" target="_blank">GitHub</a> |
-        <a href="https://augusto240.github.io/Personal-Site/" target="_blank">Portfólio</a>
+        <a href="https://github.com/Augusto240/gerenciador-academia-jiujitsu" target="_blank" rel="noopener noreferrer">GitHub</a> |
+        <a href="https://augusto240.github.io/Personal-Site/" target="_blank" rel="noopener noreferrer">Portfólio</a>
       </p>
     </footer>
 </body>

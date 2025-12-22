@@ -7,16 +7,79 @@ require 'logger'
 require 'bigdecimal'
 require 'rackup'
 require 'puma'
+require 'rack/csrf'
+require 'rack/attack'
 
 # 1. Carregar Configurações
 use Rack::MethodOverride
-enable :sessions
 
-session_secret = ENV.fetch('SESSION_SECRET') { "uma_chave_super_secreta_e_aleatoria_para_desenvolvimento_muito_muito_longa_e_segura_12345678901234" }
-if session_secret.length < 64
-  session_secret = session_secret.ljust(64, 'x')
+# Configuração de Session Secret segura
+session_secret = if ENV['RACK_ENV'] == 'production'
+  ENV.fetch('SESSION_SECRET') { raise "SESSION_SECRET não configurada em produção!" }
+else
+  ENV.fetch('SESSION_SECRET') { SecureRandom.hex(64) }
 end
-set :session_secret, session_secret
+
+# Configuração de sessões seguras
+set :sessions, {
+  key: '_academia_session',
+  secret: session_secret,
+  httponly: true,
+  secure: ENV['RACK_ENV'] == 'production',
+  same_site: :lax,
+  expire_after: 3600 * 8  # 8 horas
+}
+
+# Proteção CSRF
+use Rack::Csrf, raise: true, skip: ['POST:/login']
+
+# Rate Limiting com Rack::Attack
+use Rack::Attack
+
+# Configurar cache em memória para Rack::Attack (para desenvolvimento/teste)
+# Em produção, usar Redis: Rack::Attack.cache.store = Redis.new
+Rack::Attack.cache.store = ActiveSupport::Cache::MemoryStore.new if defined?(ActiveSupport::Cache)
+
+# Fallback para ambiente sem ActiveSupport
+class MemoryStore
+  def initialize
+    @data = {}
+    @expires = {}
+  end
+
+  def read(key)
+    return nil if @expires[key] && @expires[key] < Time.now
+    @data[key]
+  end
+
+  def write(key, value, options = {})
+    @data[key] = value
+    @expires[key] = Time.now + (options[:expires_in] || 300) if options[:expires_in]
+  end
+
+  def increment(key, amount = 1, options = {})
+    @data[key] = (@data[key] || 0) + amount
+    @expires[key] = Time.now + (options[:expires_in] || 300) if options[:expires_in]
+    @data[key]
+  end
+
+  def delete(key)
+    @data.delete(key)
+    @expires.delete(key)
+  end
+end
+
+Rack::Attack.cache.store ||= MemoryStore.new
+
+# Limitar tentativas de login: 5 por minuto por IP
+Rack::Attack.throttle('login attempts per ip', limit: 5, period: 60) do |req|
+  req.ip if req.path == '/login' && req.post?
+end
+
+# Limitar requisições gerais: 100 por minuto por IP
+Rack::Attack.throttle('requests per ip', limit: 100, period: 60) do |req|
+  req.ip
+end
 
 # Configuração de Logs
 configure do
@@ -118,6 +181,33 @@ helpers do
   def today_for_input
     Date.today.strftime('%Y-%m-%d')
   end
+  
+  # Helper para validar ID numérico
+  def valid_id?(id)
+    id.to_s.match?(/\A\d+\z/) && id.to_i > 0
+  end
+  
+  # Helper para token CSRF em formulários
+  def csrf_tag
+    Rack::Csrf.csrf_tag(env)
+  end
+  
+  def csrf_token
+    Rack::Csrf.csrf_token(env)
+  end
+end
+
+# HTTP Security Headers
+before do
+  headers 'X-Frame-Options' => 'DENY',
+          'X-Content-Type-Options' => 'nosniff',
+          'X-XSS-Protection' => '1; mode=block',
+          'Referrer-Policy' => 'strict-origin-when-cross-origin',
+          'Permissions-Policy' => 'geolocation=(), microphone=(), camera=()'
+  
+  if ENV['RACK_ENV'] == 'production'
+    headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+  end
 end
 
 # Middleware de autenticação
@@ -131,6 +221,8 @@ error do
   if ENV['RACK_ENV'] != 'production'
     logger.error env['sinatra.error'].message
     logger.error env['sinatra.error'].backtrace.join("\n")
+  else
+    logger.error "Erro interno: [REDACTED para produção]"
   end
   session[:mensagem_erro] = "Ocorreu um erro inesperado. Por favor tente novamente."
   redirect '/'
@@ -144,35 +236,41 @@ end
 get('/login') { erb :'auth/login', layout: false }
 
 post '/login' do
-  email_digitado = params[:email]
+  email_digitado = params[:email].to_s.strip.downcase
   senha_digitada = params[:password]
   
   begin
     user = nil
     with_db do |client|
-      user = client.exec_params('SELECT * FROM usuarios WHERE email = $1', [email_digitado]).first
+      user = client.exec_params('SELECT * FROM usuarios WHERE LOWER(email) = $1', [email_digitado]).first
     end
     
     if user && BCrypt::Password.new(user['password_digest']) == senha_digitada
       session[:user_id] = user['id']
-      logger.info("Login bem-sucedido: #{user['email']}")
+      logger.info("Login bem-sucedido: #{user['email']} de IP: #{request.ip}")
       redirect to('/')
     else
-      logger.warn("Tentativa de login falhou: #{email_digitado}")
+      logger.warn("Tentativa de login falhou: #{email_digitado} de IP: #{request.ip}")
       session[:mensagem_erro] = "Email ou senha inválidos."
       redirect to('/login')
     end
   rescue => e
-    logger.error("Erro no login: #{e.message}")
+    logger.error("Erro no login de IP: #{request.ip} - #{e.message}")
     session[:mensagem_erro] = "Erro ao realizar login. Tente novamente."
     redirect to('/login')
   end
 end
 
-get('/logout') do
-  log_action("Logout realizado")
+# Logout via POST para segurança contra CSRF
+post('/logout') do
+  log_action("Logout realizado de IP: #{request.ip}")
   session.clear
   session[:mensagem_sucesso] = "Você saiu com segurança."
+  redirect to('/login')
+end
+
+# Manter GET /logout para compatibilidade, mas redirecionar
+get('/logout') do
   redirect to('/login')
 end
 

@@ -1,11 +1,11 @@
-# Sistema de Gestão para Academia de Jiu Jitsu
+# Sistema de Gestão para Academia de Artes Marciais
 
 ![Ruby](https://img.shields.io/badge/Ruby-CC342D?style=for-the-badge&logo=ruby&logoColor=white)
 ![Sinatra](https://img.shields.io/badge/Sinatra-000000?style=for-the-badge&logo=sinatra&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
 
-Uma aplicação web completa para gestão de academias de jiu-jitsu, desenvolvida para ser uma ferramenta robusta e fácil de usar. O projeto é totalmente containerizado com Docker para garantir um ambiente de desenvolvimento e implantação consistente e portátil.
+Uma aplicação web completa para gestão de academias de artes marciais (Jiu-Jitsu e Muay Thai), desenvolvida para ser uma ferramenta robusta e fácil de usar. O projeto é totalmente containerizado com Docker para garantir um ambiente de desenvolvimento e implantação consistente e portátil.
 
 ## Sobre o Projeto
 
@@ -13,33 +13,45 @@ Este projeto nasceu de uma necessidade real: substituir a planilha manual do meu
 
 ## Funcionalidades Implementadas
 
-* ✅ **Gestão Completa de Alunos:** CRUD completo com busca e filtros avançados (por nome, faixa e turma).
-* ✅ **Página de Detalhes do Aluno:** Uma visão 360º de cada aluno, consolidando dados cadastrais, status financeiro, histórico de graduações e frequência.
-* ✅ **Controle de Mensalidades:** Sistema para registrar pagamentos, com cálculo automático de status ("Em Dia", "Atrasado", "Pendente").
-* ✅ **Histórico de Graduação:** Registro de todas as trocas de faixa de um aluno, atualizando seu status atual no sistema.
-* ✅ **Controle de Aulas e Presença:** Cadastro de aulas por turma e uma interface de lista de chamada para marcar a presença dos alunos.
-* ✅ **Anamnese:** Seção dedicada no cadastro e perfil do aluno para registrar informações importantes de saúde.
-* ✅ **Dashboard Interativo:** Painel principal com estatísticas, gráficos de presença, status de mensalidades e aniversariantes do mês.
-* ✅ **Sistema de Notificações:** Alertas automáticos para mensalidades atrasadas e aniversários, com interface para gerenciamento.
-* ✅ **Relatórios e Exportação:** Geração de relatórios de frequência com exportação para CSV e filtros por período.
-* ✅ **Interface Moderna e Profissional:** UI completamente redesenhada com uma paleta de cores sóbria, tipografia clara e componentes consistentes.
-* ✅ **Ambiente Containerizado:** 100% configurado com Docker e Docker Compose para portabilidade e facilidade de execução.
-* ✅ **Segurança de Dados:** Separação da estrutura (`schema.sql`) e dos dados (`data.sql`), com os dados sensíveis dos alunos sendo ignorados pelo Git para garantir a privacidade.
-* ✅ **Padrão Presenter:** Implementado para separar a lógica de apresentação dos modelos de dados.
-* ✅ **Service Objects:** Adicionados para encapsular operações de negócio complexas.
-* ✅ **Paginação:** Implementada para melhorar a performance com grande volume de dados.
-* ✅ **Pool de Conexões:** Sistema otimizado para gerenciamento eficiente de conexões com o banco de dados.
-* ✅ **Validações Avançadas:** Sistema robusto de validação para todos os tipos de dados.
-* ✅ **Proteção contra XSS:** Escapamento HTML consistente em toda a aplicação.
+### Gestão de Alunos
+* ✅ **CRUD Completo:** Cadastro, edição e exclusão com busca e filtros avançados (por nome, faixa, turma e modalidade).
+* ✅ **Suporte Multi-Modalidade:** Gerenciamento de alunos de Jiu-Jitsu e Muay Thai com faixas e turmas específicas.
+* ✅ **Página de Detalhes:** Visão 360º de cada aluno com dados cadastrais, status financeiro, histórico de graduações e frequência.
+* ✅ **Anamnese:** Seção dedicada para registrar informações importantes de saúde.
+
+### Controle Financeiro
+* ✅ **Mensalidades:** Sistema para registrar pagamentos com cálculo automático de status ("Em Dia", "Atrasado", "Pendente").
+* ✅ **Relatório de Mensalidades:** Visualização consolidada do status financeiro de todos os alunos.
+* ✅ **Suporte a Bolsistas:** Alunos podem ser marcados como bolsistas com mensalidade zerada.
+
+### Aulas e Presença
+* ✅ **Controle de Aulas:** Cadastro de aulas por modalidade (Jiu-Jitsu ou Muay Thai) e turma.
+* ✅ **Lista de Chamada:** Interface intuitiva para marcar presença dos alunos.
+* ✅ **Filtro Automático:** Lista de presença filtra automaticamente alunos pela modalidade da aula.
+
+### Dashboard e Relatórios
+* ✅ **Dashboard Interativo:** Estatísticas, gráficos de presença, status de mensalidades e aniversariantes do mês.
+* ✅ **Sistema de Notificações:** Alertas automáticos para mensalidades atrasadas e aniversários.
+* ✅ **Relatórios de Frequência:** Geração de relatórios com exportação para CSV e filtros por período.
+
+### Técnico
+* ✅ **Interface Moderna:** UI profissional com paleta de cores sóbria e componentes consistentes.
+* ✅ **Ambiente Containerizado:** 100% configurado com Docker e Docker Compose.
+* ✅ **Testes Automatizados:** Suite de testes com Minitest e Rack::Test.
+* ✅ **Segurança:** BCrypt para senhas, Prepared Statements contra SQL Injection, proteção XSS.
+* ✅ **Padrões de Design:** MVC, Presenter Pattern, Service Objects, Connection Pool.
 
 ## Tecnologias Utilizadas
 
-* **Backend:** Ruby 3.2.3 com o micro-framework Sinatra
-* **Banco de Dados:** PostgreSQL 14
-* **Frontend:** HTML5, CSS3, JavaScript, ERB (Embedded Ruby)
-* **Visualização de Dados:** Chart.js para gráficos interativos
-* **Ambiente e Orquestração:** Docker & Docker Compose
-* **Segurança:** BCrypt para senhas, Prepared Statements para prevenção de SQL Injection
+| Categoria | Tecnologia |
+|-----------|------------|
+| **Backend** | Ruby 3.2.3 com Sinatra |
+| **Banco de Dados** | PostgreSQL 14 |
+| **Frontend** | HTML5, CSS3, JavaScript, ERB |
+| **Visualização** | Chart.js |
+| **Containerização** | Docker & Docker Compose |
+| **Testes** | Minitest, Rack::Test |
+| **Segurança** | BCrypt, Prepared Statements |
 
 ## Como Rodar o Projeto
 
@@ -82,18 +94,29 @@ Para parar todo o ambiente, basta voltar ao terminal e pressionar `Ctrl` + `C`.
 ## Estrutura do Projeto
 ```
 /
-├── app.rb                   # O coração da aplicação Sinatra, com todas as rotas, lógica e padrões de design
-├── Dockerfile               # A "receita" para construir a imagem Docker do aplicativo Ruby
-├── docker-compose.yml       # O "maestro" que orquestra os contêineres do app e do banco
-├── /initdb/                 # Pasta com os scripts de inicialização do banco de dados
-│   └── 10_schema.sql        # Cria a estrutura de todas as tabelas
-├── Gemfile / Gemfile.lock   # Define as dependências (gems) do projeto
-├── /public/                 # Pasta para arquivos estáticos (CSS, imagens)
-├── /views/                  # Pasta para os templates de HTML com Ruby embutido (ERB)
-│   ├── /alunos/             # Templates relacionados a alunos
-│   ├── /aulas/              # Templates relacionados a aulas
-│   └── /relatorios/         # Templates para relatórios
-└── README.md                # Este arquivo de documentação
+├── app.rb                   # Aplicação principal Sinatra com rotas
+├── config/
+│   └── database.rb          # Configuração do pool de conexões PostgreSQL
+├── app/
+│   ├── helpers/
+│   │   └── validador.rb     # Validações de dados
+│   ├── models/              # Modelos de dados (Aluno, Aula, Presenca, etc.)
+│   ├── presenters/          # Padrão Presenter para lógica de apresentação
+│   └── services/            # Service Objects para operações complexas
+├── views/                   # Templates ERB
+│   ├── alunos/              # Views de alunos
+│   ├── aulas/               # Views de aulas e presença
+│   ├── auth/                # Tela de login
+│   └── relatorios/          # Views de relatórios
+├── public/                  # Arquivos estáticos (CSS, imagens)
+├── test/                    # Testes automatizados
+├── bin/                     # Scripts utilitários
+├── initdb/                  # Scripts de inicialização do banco
+│   ├── 10_schema.sql        # Estrutura das tabelas
+│   └── 20_data.sql          # Dados iniciais
+├── Dockerfile               # Imagem Docker do aplicativo
+├── docker-compose.yml       # Orquestração dos containers
+└── README.md                # Esta documentação
 ```
 
 ## Padrões de Design Implementados
@@ -103,15 +126,24 @@ Para parar todo o ambiente, basta voltar ao terminal e pressionar `Ctrl` + `C`.
 * **Service Objects:** Encapsula operações complexas de negócio em classes dedicadas e reutilizáveis.
 * **Connection Pool:** Gerencia eficientemente as conexões com o banco de dados para melhor performance.
 
+## Executando os Testes
+
+```bash
+# Via Docker
+docker compose exec app ruby -Ilib:test -e "Dir['test/**/*_test.rb'].each { |f| require_relative f }"
+
+# Localmente (com Ruby instalado)
+ruby -Ilib:test -e "Dir['test/**/*_test.rb'].each { |f| require_relative f }"
+```
+
 ## Roadmap de Melhorias
 
-* **Melhorias Técnicas:**
-    * [ ] Desenvolver um aplicativo móvel para complementar o sistema web.
-    * [ ] Implementar funcionalidades de backup automático para os dados.
-    * [ ] Escrever testes automatizados para a aplicação.
-    * [ ] Adicionar um portal do aluno para acesso próprio às informações.
-    * [ ] Integrar com métodos de pagamento online.
-    * [ ] Implementar sistema de eventos e competições.
+* [ ] Implementar autenticação de dois fatores (2FA)
+* [ ] Adicionar portal do aluno para acesso próprio às informações
+* [ ] Desenvolver aplicativo móvel complementar
+* [ ] Integrar com métodos de pagamento online
+* [ ] Implementar sistema de eventos e competições
+* [ ] Adicionar backup automático dos dados
 
 ---
 
