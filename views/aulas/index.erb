@@ -14,7 +14,7 @@
     <label for="turma">Para qual turma?</label>
     <select name="turma" id="turma">
       <option value="">— Escolha uma turma —</option>
-      <% TURMAS.each do |t| %>
+      <% @turmas.each do |t| %>
         <option value="<%= t %>"><%= t %></option>
       <% end %>
     </select>

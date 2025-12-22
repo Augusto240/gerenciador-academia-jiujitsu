@@ -14,6 +14,7 @@ CREATE TABLE alunos (
   id SERIAL PRIMARY KEY,
   nome VARCHAR(100) NOT NULL,
   data_nascimento DATE,
+  modalidade VARCHAR(50) DEFAULT 'Jiu Jitsu',
   cor_faixa VARCHAR(50),
   turma VARCHAR(50),
   bolsista BOOLEAN DEFAULT FALSE,

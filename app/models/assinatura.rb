@@ -76,4 +76,56 @@ class Assinatura
       count
     end
   end
+
+  def self.relatorio_mensalidades
+    with_db do |client|
+      resultados = []
+      
+      # Buscar todas as assinaturas ativas com dados do aluno
+      query = <<~SQL
+        SELECT a.id as assinatura_id, a.valor_mensalidade, a.status,
+               al.id as aluno_id, al.nome, al.modalidade
+        FROM assinaturas a
+        JOIN alunos al ON a.aluno_id = al.id
+        WHERE a.status = 'ativa'
+        ORDER BY al.nome
+      SQL
+      
+      assinaturas = client.exec(query).to_a
+      
+      assinaturas.each do |assinatura|
+        # Buscar último pagamento
+        ultimo_pag = client.exec_params(
+          "SELECT data_pagamento FROM pagamentos WHERE assinatura_id = $1 ORDER BY data_pagamento DESC LIMIT 1",
+          [assinatura['assinatura_id']]
+        ).first
+        
+        status_info = verificar_status(assinatura['assinatura_id'])
+        
+        # Calcular dias de atraso
+        dias_atraso = 0
+        ultimo_pagamento_str = 'Nunca'
+        
+        if ultimo_pag
+          data_pag = Date.parse(ultimo_pag['data_pagamento'])
+          ultimo_pagamento_str = data_pag.strftime('%d/%m/%Y')
+          vencimento = data_pag + 30
+          dias_atraso = (Date.today - vencimento).to_i if Date.today > vencimento
+        end
+        
+        resultados << {
+          aluno_id: assinatura['aluno_id'],
+          nome: assinatura['nome'],
+          modalidade: assinatura['modalidade'] || 'Jiu Jitsu',
+          valor_mensalidade: assinatura['valor_mensalidade'].to_f,
+          status: status_info[:status],
+          cor_status: status_info[:cor],
+          ultimo_pagamento: ultimo_pagamento_str,
+          dias_atraso: [dias_atraso, 0].max
+        }
+      end
+      
+      resultados
+    end
+  end
 end

@@ -11,6 +11,12 @@
     <h2>Buscar e Filtrar Alunos</h2>
     <form action="/" method="GET" class="filter-form">
         <input type="text" name="busca" placeholder="Buscar por nome..." value="<%= params[:busca] %>">
+        <select name="modalidade">
+            <option value="">Todas as Modalidades</option>
+            <% @modalidades.each do |mod| %>
+                <option value="<%= mod %>" <%= 'selected' if params[:modalidade] == mod %>><%= mod %></option>
+            <% end %>
+        </select>
         <select name="faixa">
             <option value="">Todas as Faixas</option>
             <% @faixas.each do |faixa| %>
@@ -36,6 +42,13 @@
         <form action="/alunos" method="POST">
             <label for="nome">Nome completo</label>
             <input type="text" id="nome" name="nome" placeholder="Nome do aluno" required>
+
+            <label for="modalidade">Modalidade</label>
+            <select name="modalidade" id="modalidade" onchange="atualizarFaixas()">
+              <% @modalidades.each do |mod| %>
+                <option value="<%= mod %>"><%= mod %></option>
+              <% end %>
+            </select>
 
             <label for="cor_faixa">Faixa</label>
             <select name="cor_faixa" id="cor_faixa">
@@ -75,6 +88,25 @@
 
             <button type="submit">Cadastrar Aluno</button>
         </form>
+
+        <script>
+          const faixasJiuJitsu = <%= @faixas.to_json %>;
+          const faixasMuayThai = <%= @faixas_muay_thai.to_json %>;
+          
+          function atualizarFaixas() {
+            const modalidade = document.getElementById('modalidade').value;
+            const selectFaixa = document.getElementById('cor_faixa');
+            const faixas = modalidade === 'Muay Thai' ? faixasMuayThai : faixasJiuJitsu;
+            
+            selectFaixa.innerHTML = '';
+            faixas.forEach(faixa => {
+              const option = document.createElement('option');
+              option.value = faixa;
+              option.textContent = faixa;
+              selectFaixa.appendChild(option);
+            });
+          }
+        </script>
     </section>
 
     <section class="list-section card">

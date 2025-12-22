@@ -7,3 +7,9 @@ gem 'connection_pool'
 gem 'puma'
 gem 'bigdecimal'
 gem 'rackup'
+gem 'rake'
+
+group :test do
+  gem 'minitest'
+  gem 'rack-test'
+end

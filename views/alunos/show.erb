@@ -10,6 +10,7 @@
     <h2>Dados Cadastrais</h2>
     <p><strong>Nome:</strong> <%= h presenter.nome %></p>
     <p><strong>Status:</strong> <%= h presenter.status %></p>
+    <p><strong>Modalidade:</strong> <%= h @aluno['modalidade'] || 'Jiu Jitsu' %></p>
     <p><strong>Data de Nascimento:</strong> <%= h presenter.data_nascimento_formatada %></p>
     <p><strong>Idade:</strong> <%= h presenter.idade %> anos</p>
     <p><strong>Faixa Atual:</strong> <%= h presenter.cor_faixa %></p>
@@ -103,9 +104,9 @@
 
   <section class="card">
     <h2>Histórico de Presença</h2>
-    <p><strong>Total de Aulas:</strong> <%= @total_aulas %></p>
-    <p><strong>Presenças:</strong> <%= @presencas %></p>
-    <p><strong>Faltas:</strong> <%= @faltas %></p>
+    <p><strong>Total de Aulas:</strong> <%= @estatisticas_presenca[:total_aulas] %></p>
+    <p><strong>Presenças:</strong> <%= @estatisticas_presenca[:presencas] %></p>
+    <p><strong>Faltas:</strong> <%= @estatisticas_presenca[:faltas] %></p>
     <p>O registro de presença é feito na <a href="/aulas">página de Aulas</a>.</p>
   </section>
 

@@ -9,6 +9,13 @@
     <label for="nome">Nome:</label>
     <input type="text" id="nome" name="nome" required>
 
+    <label for="modalidade">Modalidade:</label>
+    <select name="modalidade" id="modalidade" onchange="atualizarFaixas()">
+      <% @modalidades.each do |mod| %>
+        <option value="<%= mod %>"><%= mod %></option>
+      <% end %>
+    </select>
+
     <label for="cor_faixa">Cor da Faixa:</label>
     <select name="cor_faixa" id="cor_faixa">
       <% @faixas.each do |faixa| %>
@@ -47,4 +54,23 @@
 
     <button type="submit" class="btn-salvar">Cadastrar Aluno</button>
   </form>
+
+  <script>
+    const faixasJiuJitsu = <%= @faixas.to_json %>;
+    const faixasMuayThai = <%= @faixas_muay_thai.to_json %>;
+    
+    function atualizarFaixas() {
+      const modalidade = document.getElementById('modalidade').value;
+      const selectFaixa = document.getElementById('cor_faixa');
+      const faixas = modalidade === 'Muay Thai' ? faixasMuayThai : faixasJiuJitsu;
+      
+      selectFaixa.innerHTML = '';
+      faixas.forEach(faixa => {
+        const option = document.createElement('option');
+        option.value = faixa;
+        option.textContent = faixa;
+        selectFaixa.appendChild(option);
+      });
+    }
+  </script>
 </section>

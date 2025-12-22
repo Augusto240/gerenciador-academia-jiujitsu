@@ -16,7 +16,7 @@ class Aluno
     offset = (pagina - 1) * por_pagina
     
     with_db do |client|
-      query = "SELECT id, nome, data_nascimento, cor_faixa, turma FROM alunos"
+      query = "SELECT id, nome, data_nascimento, modalidade, cor_faixa, turma FROM alunos"
       conditions = []
       params_list = []
       param_count = 1
@@ -36,6 +36,12 @@ class Aluno
       if filtros[:turma] && !filtros[:turma].empty?
         conditions << "turma = $#{param_count}"
         params_list << filtros[:turma]
+        param_count += 1
+      end
+
+      if filtros[:modalidade] && !filtros[:modalidade].empty?
+        conditions << "modalidade = $#{param_count}"
+        params_list << filtros[:modalidade]
         param_count += 1
       end
 
@@ -107,16 +113,17 @@ class Aluno
 
       query = <<~SQL
         INSERT INTO alunos(
-          nome, data_nascimento, cor_faixa, turma,
+          nome, data_nascimento, modalidade, cor_faixa, turma,
           bolsista, saude_problema, saude_medicacao,
           saude_lesao, saude_substancia
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         RETURNING id
       SQL
 
       params_list = [
         params['nome'].strip,
         params['data_nascimento'].empty? ? nil : params['data_nascimento'],
+        params['modalidade'] || 'Jiu Jitsu',
         params['cor_faixa'],
         params['turma'],
         bolsista,
@@ -139,20 +146,22 @@ class Aluno
         UPDATE alunos SET
           nome = $1,
           data_nascimento = $2,
-          cor_faixa = $3,
-          turma = $4,
-          bolsista = $5,
-          saude_problema = $6,
-          saude_medicacao = $7,
-          saude_lesao = $8,
-          saude_substancia = $9
-        WHERE id = $10
+          modalidade = $3,
+          cor_faixa = $4,
+          turma = $5,
+          bolsista = $6,
+          saude_problema = $7,
+          saude_medicacao = $8,
+          saude_lesao = $9,
+          saude_substancia = $10
+        WHERE id = $11
         RETURNING id
       SQL
       
       params_list = [
         params['nome'].strip,
         params['data_nascimento'].empty? ? nil : params['data_nascimento'],
+        params['modalidade'] || 'Jiu Jitsu',
         params['cor_faixa'],
         params['turma'],
         bolsista,

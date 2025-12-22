@@ -6,9 +6,9 @@
 <div class="card">
   <h2>Gerar Relatório</h2>
   
-  <form action="/relatorios/frequencia" method="GET">
+  <form id="formRelatorio" method="GET">
     <label for="tipo">Tipo de Relatório:</label>
-    <select name="tipo" id="tipo" required>
+    <select name="tipo" id="tipo" onchange="alterarTipo()">
       <% @tipos_relatorio.each do |tipo| %>
         <option value="<%= tipo[:id] %>"><%= tipo[:nome] %></option>
       <% end %>
@@ -30,4 +30,25 @@
     
     <button type="submit" class="btn-primary">Gerar Relatório</button>
   </form>
+  
+  <script>
+    function alterarTipo() {
+      const tipo = document.getElementById('tipo').value;
+      const paramsFrequencia = document.getElementById('params-frequencia');
+      const form = document.getElementById('formRelatorio');
+      
+      // Atualizar action do form
+      form.action = '/relatorios/' + tipo;
+      
+      // Mostrar/ocultar parâmetros de data
+      if (tipo === 'frequencia') {
+        paramsFrequencia.style.display = 'block';
+      } else {
+        paramsFrequencia.style.display = 'none';
+      }
+    }
+    
+    // Executar ao carregar
+    alterarTipo();
+  </script>
 </div>

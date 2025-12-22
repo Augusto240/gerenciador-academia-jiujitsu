@@ -5,7 +5,18 @@ module Validador
     # Validações básicas
     erros << "Nome é obrigatório" if params['nome'].to_s.strip.empty?
     erros << "Nome deve ter entre 2 e 100 caracteres" if params['nome'].to_s.length < 2 || params['nome'].to_s.length > 100
-    erros << "Faixa inválida" unless FAIXAS.include?(params['cor_faixa'])
+    
+    # Validação de modalidade
+    modalidade = params['modalidade'] || 'Jiu Jitsu'
+    erros << "Modalidade inválida" unless MODALIDADES.include?(modalidade)
+    
+    # Validação de faixa de acordo com a modalidade
+    if modalidade == 'Muay Thai'
+      erros << "Faixa inválida para Muay Thai" unless FAIXAS_MUAY_THAI.include?(params['cor_faixa'])
+    else
+      erros << "Faixa inválida" unless FAIXAS.include?(params['cor_faixa'])
+    end
+    
     erros << "Turma inválida" unless TURMAS.include?(params['turma'])
     
     # Validação de data de nascimento

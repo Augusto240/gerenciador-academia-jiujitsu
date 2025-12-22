@@ -36,7 +36,9 @@ end
 # 2. Carregar Banco de Dados e Constantes
 require_relative 'config/database'
 
+MODALIDADES = ['Jiu Jitsu', 'Muay Thai']
 FAIXAS = ['Branca', 'Cinza/Branca', 'Cinza', 'Cinza/Preta', 'Amarela/Branca', 'Amarela', 'Amarela/Preta', 'Laranja/Branca', 'Laranja', 'Laranja/Preta', 'Verde/Branca', 'Verde', 'Verde/Preta', 'Azul', 'Roxa', 'Marrom', 'Preta']
+FAIXAS_MUAY_THAI = ['Sem graduação', 'Branca', 'Amarela', 'Laranja', 'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta', 'Preta e Vermelha']
 TURMAS = ['Kids 2 a 3 anos', 'Kids', 'Adolescentes/Juvenil', 'Adultos', 'Feminino', 'Master/Sênior']
 
 # 3. Carregar Módulos da Aplicação (Ordem importa!)
@@ -200,7 +202,9 @@ get '/' do
   end
   
   @faixas = FAIXAS
+  @faixas_muay_thai = FAIXAS_MUAY_THAI
   @turmas = TURMAS
+  @modalidades = MODALIDADES
   erb :index
 end
 
@@ -240,9 +244,21 @@ get '/relatorios/:tipo' do
       erb :'relatorios/frequencia'
     end
   when 'mensalidades'
-    # Implementar no futuro
-    status 404
-    "Relatório de mensalidades em desenvolvimento"
+    @relatorio = Assinatura.relatorio_mensalidades
+    
+    if formato == 'csv'
+      content_type 'text/csv'
+      attachment "relatorio_mensalidades_#{Date.today.strftime('%Y%m%d')}.csv"
+      
+      csv = ["Nome,Modalidade,Valor Mensalidade,Status,Último Pagamento,Dias Atraso"]
+      @relatorio.each do |r|
+        csv << "#{r[:nome]},#{r[:modalidade]},#{r[:valor_mensalidade]},#{r[:status]},#{r[:ultimo_pagamento]},#{r[:dias_atraso]}"
+      end
+      
+      return csv.join("\n")
+    else
+      erb :'relatorios/mensalidades'
+    end
   else
     status 404
     "Relatório não encontrado"
@@ -288,14 +304,18 @@ get '/alunos/:id/editar' do
   end
 
   @faixas = FAIXAS
+  @faixas_muay_thai = FAIXAS_MUAY_THAI
   @turmas = TURMAS
+  @modalidades = MODALIDADES
   erb :editar_aluno
 end
 
 # Rota para o formulário de novo aluno
   get '/alunos/novo' do
     @faixas = FAIXAS
+    @faixas_muay_thai = FAIXAS_MUAY_THAI
     @turmas = TURMAS
+    @modalidades = MODALIDADES
     erb :'alunos/novo'
 end
 
@@ -355,6 +375,8 @@ get '/alunos/:id' do
   @estatisticas_presenca = Aluno.obter_presencas(@aluno['id'])
 
   @faixas = FAIXAS
+  @faixas_muay_thai = FAIXAS_MUAY_THAI
+  @modalidades = MODALIDADES
   erb :'alunos/show'
 end
 

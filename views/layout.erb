@@ -43,11 +43,18 @@
             <a href="/">Alunos</a>
             <a href="/aulas">Aulas e Presença</a>
             <a href="/relatorios">Relatórios</a>
+            <a href="/logout" class="nav-logout">Sair</a>
         </nav>
         
         <% if session[:mensagem_sucesso] %>
             <div class="alert-sucesso">
                 <%= session.delete(:mensagem_sucesso) %>
+            </div>
+        <% end %>
+
+        <% if session[:mensagem_erro] %>
+            <div class="alert-erro">
+                <%= session.delete(:mensagem_erro) %>
             </div>
         <% end %>
 
