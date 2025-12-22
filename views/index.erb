@@ -40,6 +40,7 @@
     <section class="form-section card">
         <h2>Cadastrar Novo Aluno</h2>
         <form action="/alunos" method="POST">
+            <%= csrf_tag %>
             <label for="nome">Nome completo</label>
             <input type="text" id="nome" name="nome" placeholder="Nome do aluno" required>
 
@@ -129,6 +130,7 @@
                     <a href="/alunos/<%= aluno['id'] %>" class="btn-ver" title="Ver detalhes">Ver</a>
                     <a href="/alunos/<%= aluno['id'] %>/editar" class="btn-editar">Editar</a>
                     <form action="/alunos/<%= aluno['id'] %>" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza?');">
+                        <%= csrf_tag %>
                         <input type="hidden" name="_method" value="DELETE">
                         <button type="submit" class="btn-remover">Remover</button>
                     </form>

@@ -8,6 +8,7 @@
 
 <section class="list-section">
   <form action="/aulas/<%= @aula['id'] %>/presencas" method="POST">
+    <%= csrf_tag %>
     <table>
       <thead>
         <tr>

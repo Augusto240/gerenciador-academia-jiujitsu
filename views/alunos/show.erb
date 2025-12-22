@@ -37,6 +37,7 @@
 
       <h3 class="form-title">Registrar Novo Pagamento</h3>
       <form action="/pagamentos" method="POST">
+        <%= csrf_tag %>
         <input type="hidden" name="assinatura_id" value="<%= @assinatura['id'] %>">
         <input type="hidden" name="aluno_id" value="<%= @aluno['id'] %>">
 
@@ -77,6 +78,7 @@
     <h2>Histórico de Graduação</h2>
     <h3 class="form-title">Registrar Nova Graduação</h3>
     <form action="/graduacoes" method="POST">
+      <%= csrf_tag %>
       <input type="hidden" name="aluno_id" value="<%= @aluno['id'] %>">
 
       <label for="faixa">Nova Faixa/Grau:</label>

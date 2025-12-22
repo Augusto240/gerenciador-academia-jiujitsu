@@ -6,6 +6,7 @@
 <section class="card form-section">
   <h2>Dados do Aluno</h2>
   <form action="/alunos/<%= @aluno['id'] %>" method="POST">
+    <%= csrf_tag %>
     <input type="hidden" name="_method" value="PUT">
 
     <label for="nome">Nome:</label>

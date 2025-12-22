@@ -6,6 +6,7 @@
 <section class="card form-section">
   <h2>Dados do Aluno</h2>
   <form action="/alunos" method="POST">
+    <%= csrf_tag %>
     <label for="nome">Nome:</label>
     <input type="text" id="nome" name="nome" required>
 

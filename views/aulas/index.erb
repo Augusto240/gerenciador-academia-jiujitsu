@@ -5,6 +5,7 @@
 <section class="card form-section">
   <h2>Registrar Nova Aula</h2>
   <form action="/aulas" method="POST">
+    <%= csrf_tag %>
     <label for="data_aula">Data da Aula:</label>
     <input type="date" name="data_aula" value="<%= Date.today.strftime('%Y-%m-%d') %>" required>
 
