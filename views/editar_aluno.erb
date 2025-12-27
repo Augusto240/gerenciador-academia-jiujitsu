@@ -71,23 +71,10 @@
   </form>
 
   <script>
-    const faixasJiuJitsu = <%= @faixas.to_json %>;
-    const faixasMuayThai = <%= @faixas_muay_thai.to_json %>;
-    const faixaAtual = "<%= @aluno['cor_faixa'] %>";
-    
-    function atualizarFaixas() {
-      const modalidade = document.getElementById('modalidade').value;
-      const selectFaixa = document.getElementById('cor_faixa');
-      const faixas = modalidade === 'Muay Thai' ? faixasMuayThai : faixasJiuJitsu;
-      
-      selectFaixa.innerHTML = '';
-      faixas.forEach(faixa => {
-        const option = document.createElement('option');
-        option.value = faixa;
-        option.textContent = faixa;
-        if (faixa === faixaAtual) option.selected = true;
-        selectFaixa.appendChild(option);
-      });
-    }
+    // Definir faixa atual para manter seleção ao mudar modalidade
+    var faixaAtual = "<%= @aluno['cor_faixa'] %>";
+    document.getElementById('modalidade').addEventListener('change', function() {
+      atualizarFaixas(faixaAtual);
+    });
   </script>
 </section>

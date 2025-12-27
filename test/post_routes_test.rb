@@ -224,4 +224,40 @@ class PostRoutesTest < Minitest::Test
       post '/alunos/1', { _method: 'PUT', nome: 'Teste Atualizado' }
     end
   end
+  
+  # ==========================================
+  # TESTES DE EDIÇÃO DE AULA
+  # ==========================================
+  
+  def test_formulario_editar_aula_carrega
+    login_as_admin
+    # Para aula inexistente, deve redirecionar
+    get '/aulas/999999/editar'
+    assert_equal 302, last_response.status
+  end
+  
+  def test_update_aula_com_id_invalido
+    login_as_admin
+    csrf = get_csrf_token('/aulas/nova')
+    
+    post '/aulas/abc', { _method: 'PUT', data_aula: Date.today.to_s, _csrf: csrf }
+    assert_equal 400, last_response.status
+  end
+  
+  # ==========================================
+  # TESTES DE EXPORTAÇÃO DE ALUNOS
+  # ==========================================
+  
+  def test_exportar_alunos_requer_autenticacao
+    get '/alunos/export'
+    assert_equal 302, last_response.status
+  end
+  
+  def test_exportar_alunos_retorna_csv
+    login_as_admin
+    get '/alunos/export'
+    assert last_response.ok?
+    assert_includes last_response.content_type, 'text/csv'
+    assert_includes last_response.body, 'Nome,Modalidade,Turma,Faixa'
+  end
 end

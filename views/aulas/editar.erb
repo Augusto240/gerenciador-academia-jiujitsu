@@ -1,0 +1,56 @@
+<header>
+  <img src="/logo.png" alt="Logo JPM Team" class="logo">
+  <h1>✏️ Editar Aula</h1>
+  <p class="subtitle">Altere os dados da aula</p>
+  <a href="/aulas/<%= @aula['id'] %>" class="btn-secondary">⬅ Voltar</a>
+</header>
+
+<section class="card form-section">
+  <h2>📋 Dados da Aula</h2>
+  <form action="/aulas/<%= @aula['id'] %>" method="POST">
+    <%= csrf_tag %>
+    <input type="hidden" name="_method" value="PUT">
+    
+    <label for="data_aula">📅 Data da Aula:</label>
+    <input type="date" id="data_aula" name="data_aula" value="<%= @aula['data_aula'] %>" required aria-label="Data da aula">
+    
+    <label for="modalidade">🥋 Modalidade:</label>
+    <select name="modalidade" id="modalidade" aria-label="Modalidade" onchange="atualizarTurmasAula()">
+      <% @modalidades.each do |mod| %>
+        <option value="<%= mod %>" <%= 'selected' if @aula['modalidade'] == mod %>><%= mod %></option>
+      <% end %>
+    </select>
+    
+    <label for="turma">👥 Turma:</label>
+    <select name="turma" id="turma" aria-label="Turma">
+      <% turmas = @aula['modalidade'] == 'Muay Thai' ? @turmas_muay_thai : @turmas %>
+      <% turmas.each do |turma| %>
+        <option value="<%= turma %>" <%= 'selected' if @aula['turma'] == turma %>><%= turma %></option>
+      <% end %>
+    </select>
+    
+    <label for="descricao">📝 Descrição (opcional):</label>
+    <textarea id="descricao" name="descricao" placeholder="Descrição do treino..." maxlength="255" aria-label="Descrição da aula"><%= @aula['descricao'] %></textarea>
+    <small class="char-counter">Máximo 255 caracteres</small>
+    
+    <button type="submit" class="btn-primary">✓ Salvar Alterações</button>
+  </form>
+  
+  <script>
+    function atualizarTurmasAula() {
+      var modalidade = document.getElementById('modalidade').value;
+      var turmaSelect = document.getElementById('turma');
+      var turmas = modalidade === 'Muay Thai' 
+        ? ['Muay Thai'] 
+        : ['Kids', 'Infantil', 'Juvenil', 'Adultos'];
+      
+      turmaSelect.innerHTML = '';
+      turmas.forEach(function(turma) {
+        var option = document.createElement('option');
+        option.value = turma;
+        option.textContent = turma;
+        turmaSelect.appendChild(option);
+      });
+    }
+  </script>
+</section>

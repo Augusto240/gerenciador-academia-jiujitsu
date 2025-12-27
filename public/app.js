@@ -1,5 +1,28 @@
 // app.js - JavaScript compartilhado do sistema JPM Team
 
+// Faixas por modalidade (configuração centralizada)
+var FAIXAS_JIU_JITSU = ['Branca', 'Cinza', 'Amarela', 'Laranja', 'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta'];
+var FAIXAS_MUAY_THAI = ['Branca', 'Amarela', 'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta'];
+
+// Atualizar faixas baseado na modalidade (versão simplificada)
+function atualizarFaixas(faixaAtual) {
+  var modalidade = document.getElementById('modalidade');
+  var selectFaixa = document.getElementById('cor_faixa');
+  
+  if (!modalidade || !selectFaixa) return;
+  
+  var faixas = modalidade.value === 'Muay Thai' ? FAIXAS_MUAY_THAI : FAIXAS_JIU_JITSU;
+  
+  selectFaixa.innerHTML = '';
+  faixas.forEach(function(faixa) {
+    var option = document.createElement('option');
+    option.value = faixa;
+    option.textContent = faixa;
+    if (faixaAtual && faixa === faixaAtual) option.selected = true;
+    selectFaixa.appendChild(option);
+  });
+}
+
 // Atualizar opções de graduação baseado na modalidade selecionada
 function atualizarGraduacoes() {
   var modalidade = document.getElementById('modalidade').value;

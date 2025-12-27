@@ -459,6 +459,28 @@ get '/alunos/:id/editar' do
   erb :editar_aluno
 end
 
+# Rota para exportar lista de alunos em CSV
+get '/alunos/export' do
+  alunos = Aluno.todos
+  
+  content_type 'text/csv'
+  headers['Content-Disposition'] = "attachment; filename=alunos_#{Date.today}.csv"
+  
+  csv = "Nome,Modalidade,Turma,Faixa,Data Nascimento,Bolsista\n"
+  alunos.each do |aluno|
+    csv += [
+      sanitize_csv(aluno['nome']),
+      sanitize_csv(aluno['modalidade']),
+      sanitize_csv(aluno['turma']),
+      sanitize_csv(aluno['cor_faixa']),
+      aluno['data_nascimento'],
+      aluno['bolsista'] == 't' ? 'Sim' : 'Não'
+    ].join(',') + "\n"
+  end
+  
+  csv
+end
+
 # Rota para o formulário de novo aluno
   get '/alunos/novo' do
     @faixas = FAIXAS
@@ -644,6 +666,53 @@ get '/aulas/:id' do
   
   @lista_presenca = Aula.lista_presenca(@aula['id'])
   erb :'aulas/show'
+end
+
+# Rota para formulário de edição de aula
+get '/aulas/:id/editar' do
+  unless valid_id?(params['id'])
+    halt 400, 'ID inválido'
+  end
+  
+  @aula = Aula.buscar_por_id(params['id'])
+  if @aula.nil?
+    session[:mensagem_erro] = "Aula não encontrada."
+    redirect '/aulas'
+    return
+  end
+  
+  @turmas = TURMAS
+  @turmas_muay_thai = TURMAS_MUAY_THAI
+  @modalidades = MODALIDADES
+  erb :'aulas/editar'
+end
+
+# Rota para atualizar aula
+put '/aulas/:id' do
+  unless valid_id?(params['id'])
+    halt 400, 'ID inválido'
+  end
+  
+  begin
+    with_db do |client|
+      result = client.exec_params(
+        "UPDATE aulas SET data_aula = $1, modalidade = $2, turma = $3, descricao = $4 WHERE id = $5 RETURNING id",
+        [params['data_aula'], params['modalidade'], params['turma'], params['descricao'], params['id']]
+      )
+      
+      if result.ntuples > 0
+        log_action("Atualizou aula", { id: params['id'] })
+        session[:mensagem_sucesso] = "Aula atualizada com sucesso!"
+      else
+        session[:mensagem_erro] = "Aula não encontrada."
+      end
+    end
+  rescue => e
+    logger.error("Erro ao atualizar aula: #{e.message}")
+    session[:mensagem_erro] = "Erro ao atualizar aula."
+  end
+  
+  redirect "/aulas/#{params['id']}"
 end
 
 # Rota para excluir aula (apenas admin)

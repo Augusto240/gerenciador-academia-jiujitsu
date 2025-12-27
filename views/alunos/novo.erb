@@ -2,7 +2,7 @@
   <img src="/logo.png" alt="Logo JPM Team" class="logo">
   <h1>➕ Cadastrar Novo Aluno</h1>
   <p class="subtitle">Preencha os dados do aluno</p>
-  <a href="/" class="btn-secondary">⬅ Voltar para a Lista</a>
+  <a href="/" class="btn-secondary" aria-label="Voltar para a lista de alunos">⬅ Voltar para a Lista</a>
 </header>
 
 <section class="card form-section">
@@ -10,34 +10,34 @@
   <form action="/alunos" method="POST">
     <%= csrf_tag %>
     <label for="nome">👤 Nome:</label>
-    <input type="text" id="nome" name="nome" placeholder="Digite o nome completo" required>
+    <input type="text" id="nome" name="nome" placeholder="Digite o nome completo" required minlength="3" maxlength="100" aria-label="Nome do aluno" autocomplete="name">
 
     <label for="modalidade">🥋 Modalidade:</label>
-    <select name="modalidade" id="modalidade" onchange="atualizarFaixas()">
+    <select name="modalidade" id="modalidade" onchange="atualizarFaixas()" required aria-label="Modalidade">
       <% @modalidades.each do |mod| %>
         <option value="<%= mod %>"><%= mod %></option>
       <% end %>
     </select>
 
     <label for="cor_faixa">🥋 Cor da Faixa:</label>
-    <select name="cor_faixa" id="cor_faixa">
+    <select name="cor_faixa" id="cor_faixa" required aria-label="Cor da faixa">
       <% @faixas.each do |faixa| %>
         <option value="<%= faixa %>"><%= faixa %></option>
       <% end %>
     </select>
 
     <label for="data_nascimento">📅 Data de Nascimento:</label>
-    <input type="date" id="data_nascimento" name="data_nascimento">
+    <input type="date" id="data_nascimento" name="data_nascimento" aria-label="Data de nascimento" max="<%= Date.today %>">
 
     <label for="turma">👥 Turma:</label>
-    <select name="turma" id="turma">
+    <select name="turma" id="turma" required aria-label="Turma">
       <% @turmas.each do |turma| %>
         <option value="<%= turma %>"><%= turma %></option>
       <% end %>
     </select>
 
     <div class="checkbox-container">
-      <input type="checkbox" id="bolsista" name="bolsista">
+      <input type="checkbox" id="bolsista" name="bolsista" aria-label="Marcar como bolsista">
       <label for="bolsista">🏆 Bolsista?</label>
     </div>
 
@@ -57,23 +57,4 @@
 
     <button type="submit" class="btn-primary">✓ Cadastrar Aluno</button>
   </form>
-
-  <script>
-    const faixasJiuJitsu = <%= @faixas.to_json %>;
-    const faixasMuayThai = <%= @faixas_muay_thai.to_json %>;
-    
-    function atualizarFaixas() {
-      const modalidade = document.getElementById('modalidade').value;
-      const selectFaixa = document.getElementById('cor_faixa');
-      const faixas = modalidade === 'Muay Thai' ? faixasMuayThai : faixasJiuJitsu;
-      
-      selectFaixa.innerHTML = '';
-      faixas.forEach(faixa => {
-        const option = document.createElement('option');
-        option.value = faixa;
-        option.textContent = faixa;
-        selectFaixa.appendChild(option);
-      });
-    }
-  </script>
 </section>
