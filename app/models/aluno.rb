@@ -218,17 +218,26 @@ class Aluno
 
   def self.registrar_graduacao(aluno_id, faixa, data_graduacao)
     with_db do |client|
-      # Registrar graduação
-      client.exec_params(
-        "INSERT INTO graduacoes(aluno_id, faixa, data_graduacao) VALUES ($1, $2, $3) RETURNING id",
-        [aluno_id, faixa, data_graduacao]
-      )
-      
-      # Atualizar faixa atual do aluno
-      client.exec_params(
-        "UPDATE alunos SET cor_faixa = $1, updated_at = NOW() WHERE id = $2",
-        [faixa, aluno_id]
-      )
+      # Usar transação para garantir atomicidade
+      client.exec("BEGIN")
+      begin
+        # Registrar graduação
+        client.exec_params(
+          "INSERT INTO graduacoes(aluno_id, faixa, data_graduacao) VALUES ($1, $2, $3) RETURNING id",
+          [aluno_id, faixa, data_graduacao]
+        )
+        
+        # Atualizar faixa atual do aluno
+        client.exec_params(
+          "UPDATE alunos SET cor_faixa = $1, updated_at = NOW() WHERE id = $2",
+          [faixa, aluno_id]
+        )
+        
+        client.exec("COMMIT")
+      rescue => e
+        client.exec("ROLLBACK")
+        raise e
+      end
     end
   end
 
@@ -243,7 +252,23 @@ class Aluno
 
   def self.obter_presencas(aluno_id)
     with_db do |client|
-      total_aulas = client.exec("SELECT COUNT(id) as count FROM aulas").first['count'].to_i
+      # Buscar turma do aluno para contar apenas aulas relevantes
+      aluno = client.exec_params("SELECT turma, modalidade FROM alunos WHERE id = $1", [aluno_id]).first
+      return { total_aulas: 0, presencas: 0, faltas: 0 } unless aluno
+      
+      turma = aluno['turma']
+      modalidade = aluno['modalidade']
+      
+      # Contar aulas da turma do aluno (ou todas se não tiver turma definida)
+      if turma && !turma.empty?
+        total_aulas = client.exec_params(
+          "SELECT COUNT(id) as count FROM aulas WHERE turma = $1",
+          [turma]
+        ).first['count'].to_i
+      else
+        total_aulas = client.exec("SELECT COUNT(id) as count FROM aulas").first['count'].to_i
+      end
+      
       presencas = client.exec_params(
         "SELECT COUNT(id) as count FROM presencas WHERE aluno_id = $1 AND presente = TRUE",
         [aluno_id]
@@ -252,7 +277,7 @@ class Aluno
       {
         total_aulas: total_aulas,
         presencas: presencas,
-        faltas: total_aulas - presencas
+        faltas: [total_aulas - presencas, 0].max
       }
     end
   end

@@ -245,7 +245,7 @@ end
 
 # Middleware de autenticação
 before do
-  pass if ['/login', '/style.css', '/logo.png', '/favicon.ico'].include? request.path_info
+  pass if ['/login', '/health', '/style.css', '/logo.png', '/favicon.ico'].include? request.path_info
   redirect to('/login') unless logged_in?
 end
 
@@ -270,7 +270,10 @@ get('/login') { erb :'auth/login', layout: false }
 
 post '/login' do
   email_digitado = params[:email].to_s.strip.downcase
-  senha_digitada = params[:password]
+  senha_digitada = params[:password].to_s
+  
+  # Hash fictício para comparação quando usuário não existe (mitiga timing attack)
+  hash_ficticio = BCrypt::Password.create('dummy_password_for_timing')
   
   begin
     user = nil
@@ -278,7 +281,11 @@ post '/login' do
       user = client.exec_params('SELECT * FROM usuarios WHERE LOWER(email) = $1', [email_digitado]).first
     end
     
-    if user && BCrypt::Password.new(user['password_digest']) == senha_digitada
+    # Sempre executa comparação de senha para evitar timing attack
+    hash_para_comparar = user ? user['password_digest'] : hash_ficticio
+    senha_valida = BCrypt::Password.new(hash_para_comparar) == senha_digitada
+    
+    if user && senha_valida
       session[:user_id] = user['id']
       logger.info("Login bem-sucedido: #{user['email']} de IP: #{request.ip}")
       redirect to('/')
@@ -424,6 +431,10 @@ post '/alunos' do
 end
 
 get '/alunos/:id/editar' do
+  unless valid_id?(params['id'])
+    halt 400, 'ID inválido'
+  end
+  
   @aluno = Aluno.buscar_por_id(params['id'])
   redirect '/' if @aluno.nil?
 
@@ -452,6 +463,10 @@ end
 end
 
 put '/alunos/:id' do
+  unless valid_id?(params['id'])
+    halt 400, 'ID inválido'
+  end
+  
   erros = validar_aluno(params)
   
   if erros.any?
@@ -473,6 +488,10 @@ put '/alunos/:id' do
 end
 
 delete '/alunos/:id' do
+  unless valid_id?(params['id'])
+    halt 400, 'ID inválido'
+  end
+  
   begin
     aluno = Aluno.buscar_por_id(params['id'])
     Aluno.excluir(params['id'])
@@ -487,6 +506,10 @@ delete '/alunos/:id' do
 end
 
 get '/alunos/:id' do
+  unless valid_id?(params['id'])
+    halt 400, 'ID inválido'
+  end
+  
   @aluno = Aluno.buscar_por_id(params['id'])
   redirect '/' if @aluno.nil?
 
@@ -514,7 +537,13 @@ end
 
 # Rotas para aulas
 get '/aulas' do
-  @aulas = Aula.todas
+  pagina = params[:pagina]&.to_i || 1
+  result = Aula.todas(pagina, 20)
+  
+  @aulas = result[:aulas]
+  @pagina_atual = result[:pagina_atual]
+  @total_paginas = result[:total_paginas]
+  @total_aulas = result[:total]
   @turmas = TURMAS
   @turmas_muay_thai = TURMAS_MUAY_THAI
   @modalidades = MODALIDADES
@@ -557,6 +586,10 @@ get '/aulas/nova' do
 end
 
 get '/aulas/:id' do
+  unless valid_id?(params['id'])
+    halt 400, 'ID inválido'
+  end
+  
   @aula = Aula.buscar_por_id(params['id'])
   redirect '/aulas' if @aula.nil?
   
@@ -624,6 +657,14 @@ post '/pagamentos' do
   
   if erros.any?
     session[:mensagem_erro] = erros.join(", ")
+    redirect "/alunos/#{params['aluno_id']}"
+    return
+  end
+  
+  # Validar que a assinatura pertence ao aluno (previne manipulação de hidden field)
+  assinatura = Assinatura.buscar_ativa(params['aluno_id'])
+  if assinatura.nil? || assinatura['id'].to_s != params['assinatura_id'].to_s
+    session[:mensagem_erro] = "Assinatura inválida para este aluno."
     redirect "/alunos/#{params['aluno_id']}"
     return
   end
@@ -697,6 +738,28 @@ post '/graduacoes' do
     session[:mensagem_erro] = "Erro ao registrar graduação. Verifique os dados e tente novamente."
     redirect "/alunos/#{params['aluno_id']}"
   end
+end
+
+# Endpoint de health check para monitoramento
+get '/health' do
+  content_type :json
+  
+  begin
+    # Verificar conexão com banco de dados
+    db_status = with_db { |client| client.exec("SELECT 1").first ? 'ok' : 'error' }
+  rescue => e
+    db_status = 'error'
+  end
+  
+  status_code = db_status == 'ok' ? 200 : 503
+  status status_code
+  
+  {
+    status: db_status == 'ok' ? 'healthy' : 'unhealthy',
+    timestamp: Time.now.iso8601,
+    database: db_status,
+    version: '1.0.0'
+  }.to_json
 end
 
 # Adicionar rota para dashboard em app.rb

@@ -101,5 +101,20 @@
           </tr>
         <% end %>
       </tbody>
-  </table>
+    </table>
+  </div>
+  
+  <% if @total_paginas && @total_paginas > 1 %>
+  <div class="paginacao">
+    <% if @pagina_atual > 1 %>
+      <a href="/aulas?pagina=<%= @pagina_atual - 1 %>" class="btn-paginacao">← Anterior</a>
+    <% end %>
+    
+    <span class="pagina-info">Página <%= @pagina_atual %> de <%= @total_paginas %> (<%= @total_aulas %> aulas)</span>
+    
+    <% if @pagina_atual < @total_paginas %>
+      <a href="/aulas?pagina=<%= @pagina_atual + 1 %>" class="btn-paginacao">Próxima →</a>
+    <% end %>
+  </div>
+  <% end %>
 </section>

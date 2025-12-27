@@ -34,27 +34,37 @@ class Notificacao
   end
   
   def self.gerar_notificacoes_automaticas
-    # Verificar mensalidades atrasadas
+    # Verificar mensalidades atrasadas - Query única otimizada (sem N+1)
     with_db do |client|
-      assinaturas = client.exec("SELECT a.id, al.nome FROM assinaturas a JOIN alunos al ON a.aluno_id = al.id WHERE a.status = 'ativa'").to_a
+      # Buscar todas as assinaturas atrasadas de uma vez usando subquery
+      atrasados = client.exec(<<~SQL).to_a
+        SELECT a.id, al.nome
+        FROM assinaturas a
+        JOIN alunos al ON a.aluno_id = al.id
+        LEFT JOIN (
+          SELECT assinatura_id, MAX(data_pagamento) as ultimo_pagamento
+          FROM pagamentos
+          GROUP BY assinatura_id
+        ) p ON a.id = p.assinatura_id
+        WHERE a.status = 'ativa'
+          AND al.deleted_at IS NULL
+          AND p.ultimo_pagamento IS NOT NULL
+          AND (p.ultimo_pagamento + INTERVAL '30 days') < CURRENT_DATE
+      SQL
       
-      assinaturas.each do |assinatura|
-        status_info = Assinatura.verificar_status(assinatura['id'])
+      atrasados.each do |assinatura|
+        titulo = "Mensalidade atrasada"
+        mensagem = "A mensalidade do aluno #{assinatura['nome']} está atrasada."
         
-        if status_info[:status] == "Atrasado"
-          titulo = "Mensalidade atrasada"
-          mensagem = "A mensalidade do aluno #{assinatura['nome']} está atrasada."
-          
-          # Usar INSERT com ON CONFLICT para evitar duplicatas de forma atômica
-          client.exec_params(
-            "INSERT INTO notificacoes(titulo, mensagem, tipo, lida, criado_em)
-             SELECT $1, $2, 'warning', FALSE, NOW()
-             WHERE NOT EXISTS (
-               SELECT 1 FROM notificacoes WHERE mensagem = $2 AND lida = FALSE
-             )",
-            [titulo, mensagem]
-          )
-        end
+        # Usar INSERT com ON CONFLICT para evitar duplicatas de forma atômica
+        client.exec_params(
+          "INSERT INTO notificacoes(titulo, mensagem, tipo, lida, criado_em)
+           SELECT $1, $2, 'warning', FALSE, NOW()
+           WHERE NOT EXISTS (
+             SELECT 1 FROM notificacoes WHERE mensagem = $2 AND lida = FALSE
+           )",
+          [titulo, mensagem]
+        )
       end
     end
     

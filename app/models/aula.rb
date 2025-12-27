@@ -1,5 +1,27 @@
 class Aula
-  def self.todas
+  def self.todas(pagina = 1, por_pagina = 20)
+    pagina = [pagina.to_i, 1].max
+    por_pagina = [[por_pagina.to_i, 10].max, 100].min  # Entre 10 e 100
+    offset = (pagina - 1) * por_pagina
+    
+    with_db do |client|
+      total = client.exec("SELECT COUNT(*) as count FROM aulas").first['count'].to_i
+      aulas = client.exec_params(
+        "SELECT * FROM aulas ORDER BY data_aula DESC LIMIT $1 OFFSET $2",
+        [por_pagina, offset]
+      ).to_a
+      
+      {
+        aulas: aulas,
+        pagina_atual: pagina,
+        total_paginas: (total.to_f / por_pagina).ceil,
+        total: total
+      }
+    end
+  end
+  
+  # Método legado para compatibilidade
+  def self.todas_sem_paginacao
     with_db do |client|
       client.exec("SELECT * FROM aulas ORDER BY data_aula DESC").to_a
     end
