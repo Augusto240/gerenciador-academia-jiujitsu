@@ -4,53 +4,65 @@ module AulaService
     
     begin
       with_db do |client|
-        modalidade = params['modalidade'] || 'Jiu Jitsu'
-        turma_aula = params['turma'].to_s.empty? ? nil : params['turma']
-        todas_turmas = params['todas_turmas'] == 'on'
-
-        # Para Muay Thai, a turma é sempre "Muay Thai"
-        if modalidade == 'Muay Thai'
-          turma_aula = 'Muay Thai'
-        end
-
-        insert_result = client.exec_params(
-          "INSERT INTO aulas (data_aula, modalidade, turma, descricao) VALUES ($1, $2, $3, $4) RETURNING id",
-          [params['data_aula'], modalidade, turma_aula, params['descricao']]
-        ).first
-        aula_id = insert_result['id']
-
-        # Selecionar alunos para a lista de presença baseado na modalidade
-        alunos_q = if modalidade == 'Muay Thai'
-          # Para Muay Thai, pegar todos os alunos dessa modalidade
-          client.exec_params("SELECT id FROM alunos WHERE modalidade = $1", [modalidade])
-        elsif todas_turmas
-          # Para Jiu Jitsu com todas as turmas
-          client.exec_params("SELECT id FROM alunos WHERE modalidade = $1", ['Jiu Jitsu'])
-        elsif turma_aula
-          # Para uma turma específica de Jiu Jitsu
-          client.exec_params("SELECT id FROM alunos WHERE turma = $1 AND modalidade = $2", [turma_aula, 'Jiu Jitsu'])
-        else
-          # Fallback: todos os alunos de Jiu Jitsu
-          client.exec_params("SELECT id FROM alunos WHERE modalidade = $1", ['Jiu Jitsu'])
-        end
-
-        # Inicializar presenças em massa com batch insert (otimizado)
-        alunos_ids = alunos_q.map { |a| a['id'] }
+        # Iniciar transação para garantir atomicidade
+        client.exec("BEGIN")
         
-        if alunos_ids.any?
-          # Construir batch insert para melhor performance
-          values = alunos_ids.map.with_index { |id, i| "($1, $#{i + 2}, FALSE)" }.join(", ")
-          params_list = [aula_id] + alunos_ids
+        begin
+          modalidade = params['modalidade'] || 'Jiu Jitsu'
+          turma_aula = params['turma'].to_s.empty? ? nil : params['turma']
+          todas_turmas = params['todas_turmas'] == 'on'
+
+          # Para Muay Thai, a turma é sempre "Muay Thai"
+          if modalidade == 'Muay Thai'
+            turma_aula = 'Muay Thai'
+          end
+
+          insert_result = client.exec_params(
+            "INSERT INTO aulas (data_aula, modalidade, turma, descricao) VALUES ($1, $2, $3, $4) RETURNING id",
+            [params['data_aula'], modalidade, turma_aula, params['descricao']]
+          ).first
+          aula_id = insert_result['id']
+
+          # Selecionar alunos para a lista de presença baseado na modalidade
+          alunos_q = if modalidade == 'Muay Thai'
+            # Para Muay Thai, pegar todos os alunos dessa modalidade
+            client.exec_params("SELECT id FROM alunos WHERE modalidade = $1 AND deleted_at IS NULL", [modalidade])
+          elsif todas_turmas
+            # Para Jiu Jitsu com todas as turmas
+            client.exec_params("SELECT id FROM alunos WHERE modalidade = $1 AND deleted_at IS NULL", ['Jiu Jitsu'])
+          elsif turma_aula
+            # Para uma turma específica de Jiu Jitsu
+            client.exec_params("SELECT id FROM alunos WHERE turma = $1 AND modalidade = $2 AND deleted_at IS NULL", [turma_aula, 'Jiu Jitsu'])
+          else
+            # Fallback: todos os alunos de Jiu Jitsu
+            client.exec_params("SELECT id FROM alunos WHERE modalidade = $1 AND deleted_at IS NULL", ['Jiu Jitsu'])
+          end
+
+          # Inicializar presenças em massa com batch insert (otimizado)
+          alunos_ids = alunos_q.map { |a| a['id'] }
           
-          client.exec_params(
-            "INSERT INTO presencas (aula_id, aluno_id, presente) VALUES #{values} ON CONFLICT (aluno_id, aula_id) DO NOTHING",
-            params_list
-          )
+          if alunos_ids.any?
+            # Construir batch insert para melhor performance
+            values = alunos_ids.map.with_index { |id, i| "($1, $#{i + 2}, FALSE)" }.join(", ")
+            params_list = [aula_id] + alunos_ids
+            
+            client.exec_params(
+              "INSERT INTO presencas (aula_id, aluno_id, presente) VALUES #{values} ON CONFLICT (aluno_id, aula_id) DO NOTHING",
+              params_list
+            )
+          end
+          
+          # Commit da transação se tudo ocorreu bem
+          client.exec("COMMIT")
+          
+          result[:success] = true
+          result[:message] = "Aula criada com sucesso!"
+          result[:aula_id] = aula_id
+        rescue => e
+          # Rollback em caso de erro
+          client.exec("ROLLBACK")
+          raise e
         end
-        
-        result[:success] = true
-        result[:message] = "Aula criada com sucesso!"
-        result[:aula_id] = aula_id
       end
     rescue PG::Error => e
       result[:message] = "Erro de banco de dados: #{e.message}"
