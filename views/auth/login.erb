@@ -28,12 +28,17 @@
     <% if session[:mensagem_erro] %>
       <div class="alert-erro"><%= session.delete(:mensagem_erro) %></div>
     <% end %>
+    
+    <% if session[:mensagem_sucesso] %>
+      <div class="alert-sucesso"><%= session.delete(:mensagem_sucesso) %></div>
+    <% end %>
 
     <form action="/login" method="POST">
+      <%= Rack::Csrf.csrf_tag(env) %>
       <label for="email">Email</label>
-      <input type="email" id="email" name="email" required>
+      <input type="email" id="email" name="email" required autocomplete="email">
       <label for="password">Senha</label>
-      <input type="password" id="password" name="password" required>
+      <input type="password" id="password" name="password" required autocomplete="current-password">
       <button type="submit">Entrar</button>
     </form>
   </div>

@@ -13,9 +13,12 @@ class Notificacao
   
   def self.criar(titulo, mensagem, tipo = 'info')
     with_db do |client|
+      # Usar INSERT ON CONFLICT para evitar race condition e duplicatas
       client.exec_params(
         "INSERT INTO notificacoes(titulo, mensagem, tipo, lida, criado_em) 
-         VALUES ($1, $2, $3, FALSE, NOW()) RETURNING id",
+         VALUES ($1, $2, $3, FALSE, NOW())
+         ON CONFLICT DO NOTHING
+         RETURNING id",
         [titulo, mensagem, tipo]
       ).first
     end
@@ -42,15 +45,15 @@ class Notificacao
           titulo = "Mensalidade atrasada"
           mensagem = "A mensalidade do aluno #{assinatura['nome']} está atrasada."
           
-          # Verificar se já existe notificação similar não lida
-          notificacoes_existentes = client.exec_params(
-            "SELECT id FROM notificacoes WHERE mensagem = $1 AND lida = FALSE",
-            [mensagem]
-          ).to_a
-          
-          if notificacoes_existentes.empty?
-            criar(titulo, mensagem, 'warning')
-          end
+          # Usar INSERT com ON CONFLICT para evitar duplicatas de forma atômica
+          client.exec_params(
+            "INSERT INTO notificacoes(titulo, mensagem, tipo, lida, criado_em)
+             SELECT $1, $2, 'warning', FALSE, NOW()
+             WHERE NOT EXISTS (
+               SELECT 1 FROM notificacoes WHERE mensagem = $2 AND lida = FALSE
+             )",
+            [titulo, mensagem]
+          )
         end
       end
     end
@@ -69,15 +72,15 @@ class Notificacao
         titulo = "Aniversário hoje!"
         mensagem = "Hoje é aniversário de #{aluno['nome']}."
         
-        # Verificar se já existe notificação similar não lida
-        notificacoes_existentes = client.exec_params(
-          "SELECT id FROM notificacoes WHERE mensagem = $1 AND lida = FALSE",
-          [mensagem]
-        ).to_a
-        
-        if notificacoes_existentes.empty?
-          criar(titulo, mensagem, 'info')
-        end
+        # Usar INSERT com ON CONFLICT para evitar duplicatas de forma atômica
+        client.exec_params(
+          "INSERT INTO notificacoes(titulo, mensagem, tipo, lida, criado_em)
+           SELECT $1, $2, 'info', FALSE, NOW()
+           WHERE NOT EXISTS (
+             SELECT 1 FROM notificacoes WHERE mensagem = $2 AND lida = FALSE
+           )",
+          [titulo, mensagem]
+        )
       end
     end
   end

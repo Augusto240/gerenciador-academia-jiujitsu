@@ -23,7 +23,10 @@ CREATE TABLE alunos (
   saude_problema TEXT,
   saude_medicacao TEXT,
   saude_lesao TEXT,
-  saude_substancia TEXT
+  saude_substancia TEXT,
+  deleted_at TIMESTAMP DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Tabela de Planos
@@ -86,3 +89,39 @@ CREATE TABLE notificacoes (
   criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   lida_em TIMESTAMP
 );
+
+-- ======================
+-- ÍNDICES PARA PERFORMANCE
+-- ======================
+
+-- Índice para busca de alunos por nome (usado no filtro)
+CREATE INDEX idx_alunos_nome ON alunos(nome);
+CREATE INDEX idx_alunos_modalidade ON alunos(modalidade);
+CREATE INDEX idx_alunos_turma ON alunos(turma);
+CREATE INDEX idx_alunos_data_nascimento ON alunos(data_nascimento);
+
+-- Índices para assinaturas
+CREATE INDEX idx_assinaturas_aluno_id ON assinaturas(aluno_id);
+CREATE INDEX idx_assinaturas_status ON assinaturas(status);
+
+-- Índices para pagamentos
+CREATE INDEX idx_pagamentos_assinatura_id ON pagamentos(assinatura_id);
+CREATE INDEX idx_pagamentos_data ON pagamentos(data_pagamento DESC);
+
+-- Índices para aulas
+CREATE INDEX idx_aulas_data ON aulas(data_aula DESC);
+CREATE INDEX idx_aulas_modalidade ON aulas(modalidade);
+CREATE INDEX idx_aulas_turma ON aulas(turma);
+
+-- Índices para presenças
+CREATE INDEX idx_presencas_aula_id ON presencas(aula_id);
+CREATE INDEX idx_presencas_aluno_id ON presencas(aluno_id);
+CREATE INDEX idx_presencas_presente ON presencas(presente) WHERE presente = TRUE;
+
+-- Índices para graduações
+CREATE INDEX idx_graduacoes_aluno_id ON graduacoes(aluno_id);
+CREATE INDEX idx_graduacoes_data ON graduacoes(data_graduacao DESC);
+
+-- Índices para notificações
+CREATE INDEX idx_notificacoes_lida ON notificacoes(lida) WHERE lida = FALSE;
+CREATE INDEX idx_notificacoes_criado_em ON notificacoes(criado_em DESC);

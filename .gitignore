@@ -1,5 +1,10 @@
 data.sql
 
+# Arquivos de ambiente (contém senhas)
+.env
+.env.local
+.env.production
+
 # Ignora todo o conteúdo da pasta de backups...
 docker/backups/backup_academia.sql
 
@@ -9,3 +14,23 @@ docker/backups
 /docker/backups*
 docker/backups/*.sqldocker/backups/*.sql
 backup_notebook.sql
+
+# Logs
+logs/*.log
+
+# Ruby/Bundler
+.bundle/
+vendor/bundle/
+*.gem
+Gemfile.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

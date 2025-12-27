@@ -6,13 +6,13 @@ class Aluno
 
   def self.todos
     with_db do |client|
-      client.exec("SELECT * FROM alunos ORDER BY nome").to_a
+      client.exec("SELECT * FROM alunos WHERE deleted_at IS NULL ORDER BY nome").to_a
     end
   end
 
   def self.buscar_por_id(id)
     with_db do |client|
-      client.exec_params("SELECT * FROM alunos WHERE id = $1", [id.to_i]).first
+      client.exec_params("SELECT * FROM alunos WHERE id = $1 AND deleted_at IS NULL", [id.to_i]).first
     end
   end
 
@@ -22,7 +22,7 @@ class Aluno
     
     with_db do |client|
       query = "SELECT id, nome, data_nascimento, modalidade, cor_faixa, turma FROM alunos"
-      conditions = []
+      conditions = ["deleted_at IS NULL"]  # Sempre filtrar por soft delete
       params_list = []
       param_count = 1
 
@@ -100,7 +100,7 @@ class Aluno
 
   def self.total
     with_db do |client|
-      result = client.exec("SELECT COUNT(id) AS count FROM alunos")
+      result = client.exec("SELECT COUNT(id) AS count FROM alunos WHERE deleted_at IS NULL")
       result.first['count'].to_i
     end
   end
@@ -182,9 +182,37 @@ class Aluno
     end
   end
 
+  # Soft delete - marca o aluno como excluído sem remover do banco
   def self.excluir(id)
     with_db do |client|
+      client.exec_params(
+        "UPDATE alunos SET deleted_at = NOW(), updated_at = NOW() WHERE id = $1 AND deleted_at IS NULL RETURNING id",
+        [id]
+      ).first
+    end
+  end
+  
+  # Hard delete - remove permanentemente (usar com cuidado)
+  def self.excluir_permanente(id)
+    with_db do |client|
       client.exec_params("DELETE FROM alunos WHERE id = $1 RETURNING id", [id]).first
+    end
+  end
+  
+  # Restaurar aluno excluído
+  def self.restaurar(id)
+    with_db do |client|
+      client.exec_params(
+        "UPDATE alunos SET deleted_at = NULL, updated_at = NOW() WHERE id = $1 RETURNING id",
+        [id]
+      ).first
+    end
+  end
+  
+  # Buscar alunos excluídos (para admin)
+  def self.buscar_excluidos
+    with_db do |client|
+      client.exec("SELECT * FROM alunos WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC").to_a
     end
   end
 
@@ -198,7 +226,7 @@ class Aluno
       
       # Atualizar faixa atual do aluno
       client.exec_params(
-        "UPDATE alunos SET cor_faixa = $1 WHERE id = $2",
+        "UPDATE alunos SET cor_faixa = $1, updated_at = NOW() WHERE id = $2",
         [faixa, aluno_id]
       )
     end
@@ -235,6 +263,7 @@ class Aluno
       client.exec_params(
         "SELECT id, nome, data_nascimento FROM alunos 
          WHERE EXTRACT(MONTH FROM data_nascimento) = $1
+         AND deleted_at IS NULL
          ORDER BY EXTRACT(DAY FROM data_nascimento)",
         [mes_atual]
       ).to_a
@@ -242,53 +271,60 @@ class Aluno
   end
 
   def self.relatorio_frequencia(inicio_periodo = nil, fim_periodo = nil)
-    inicio_periodo ||= Date.today.beginning_of_month
-    fim_periodo ||= Date.today
+    hoje = Date.today
+    inicio_periodo ||= Date.new(hoje.year, hoje.month, 1)
+    fim_periodo ||= hoje
     
     with_db do |client|
-      # Buscar todos os alunos ativos
-      alunos = client.exec("SELECT id, nome FROM alunos ORDER BY nome").to_a
+      # Query otimizada: busca tudo de uma vez usando LEFT JOIN e agregação
+      # Evita N+1 queries (antes fazia N*M queries para N alunos e M aulas)
+      query = <<~SQL
+        WITH aulas_periodo AS (
+          SELECT id FROM aulas 
+          WHERE data_aula BETWEEN $1 AND $2
+        ),
+        total_aulas AS (
+          SELECT COUNT(*) as count FROM aulas_periodo
+        ),
+        presencas_por_aluno AS (
+          SELECT 
+            al.id as aluno_id,
+            al.nome,
+            COUNT(CASE WHEN p.presente = TRUE THEN 1 END) as presencas,
+            COUNT(CASE WHEN p.presente = FALSE OR p.presente IS NULL THEN 1 END) as faltas
+          FROM alunos al
+          LEFT JOIN presencas p ON al.id = p.aluno_id 
+            AND p.aula_id IN (SELECT id FROM aulas_periodo)
+          GROUP BY al.id, al.nome
+          ORDER BY al.nome
+        )
+        SELECT 
+          ppa.aluno_id,
+          ppa.nome,
+          ppa.presencas,
+          ppa.faltas,
+          ta.count as total_aulas,
+          CASE 
+            WHEN ta.count = 0 THEN 0 
+            ELSE ROUND((ppa.presencas::numeric / ta.count) * 100, 2) 
+          END as taxa_frequencia
+        FROM presencas_por_aluno ppa
+        CROSS JOIN total_aulas ta
+      SQL
       
-      # Buscar aulas no período
-      aulas = client.exec_params(
-        "SELECT id, data_aula FROM aulas WHERE data_aula BETWEEN $1 AND $2 ORDER BY data_aula",
-        [inicio_periodo.to_s, fim_periodo.to_s]
-      ).to_a
+      result = client.exec_params(query, [inicio_periodo.to_s, fim_periodo.to_s]).to_a
       
-      # Para cada aluno, verificar a presença em cada aula
-      resultados = []
-      
-      alunos.each do |aluno|
-        presencas = 0
-        faltas = 0
-        
-        aulas.each do |aula|
-          presente = client.exec_params(
-            "SELECT presente FROM presencas WHERE aluno_id = $1 AND aula_id = $2",
-            [aluno['id'], aula['id']]
-          ).first
-          
-          if presente && presente['presente'] == 't'
-            presencas += 1
-          else
-            faltas += 1
-          end
-        end
-        
-        # Calcular a taxa de frequência
-        taxa_frequencia = aulas.empty? ? 0 : (presencas.to_f / aulas.size * 100).round(2)
-        
-        resultados << {
-          aluno_id: aluno['id'],
-          nome: aluno['nome'],
-          presencas: presencas,
-          faltas: faltas,
-          total_aulas: aulas.size,
-          taxa_frequencia: taxa_frequencia
+      # Converter para o formato esperado
+      result.map do |r|
+        {
+          aluno_id: r['aluno_id'],
+          nome: r['nome'],
+          presencas: r['presencas'].to_i,
+          faltas: r['faltas'].to_i,
+          total_aulas: r['total_aulas'].to_i,
+          taxa_frequencia: r['taxa_frequencia'].to_f
         }
       end
-
-      resultados
     end
   end
 end

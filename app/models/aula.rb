@@ -30,8 +30,9 @@ class Aula
   end
 
   def self.total_no_mes_atual
-    inicio_mes = Date.beginning_of_month(Date.today)
-    fim_mes = Date.end_of_month(Date.today)
+    hoje = Date.today
+    inicio_mes = Date.new(hoje.year, hoje.month, 1)
+    fim_mes = Date.new(hoje.year, hoje.month, -1)
     
     with_db do |client|
       client.exec_params(

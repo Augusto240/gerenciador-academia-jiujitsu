@@ -33,8 +33,8 @@ set :sessions, {
   expire_after: 3600 * 8  # 8 horas
 }
 
-# Proteção CSRF
-use Rack::Csrf, raise: true, skip: ['POST:/login']
+# Proteção CSRF (agora inclui login também)
+use Rack::Csrf, raise: true
 
 # Rate Limiting com Rack::Attack
 use Rack::Attack
@@ -190,6 +190,27 @@ helpers do
     id.to_s.match?(/\A\d+\z/) && id.to_i > 0
   end
   
+  # Helper para sanitizar valores CSV (previne CSV Injection)
+  # Valores que começam com =, +, -, @ podem executar fórmulas no Excel
+  def sanitize_csv(value)
+    str = value.to_s
+    if str.match?(/\A[=+\-@]/)
+      "'#{str}"  # Prefixar com aspas simples
+    else
+      str
+    end
+  end
+  
+  # Helper para primeiro dia do mês
+  def beginning_of_month(date = Date.today)
+    Date.new(date.year, date.month, 1)
+  end
+  
+  # Helper para último dia do mês
+  def end_of_month(date = Date.today)
+    Date.new(date.year, date.month, -1)
+  end
+  
   # Helper para token CSRF em formulários
   def csrf_tag
     Rack::Csrf.csrf_tag(env)
@@ -326,7 +347,7 @@ get '/relatorios/:tipo' do
   
   case tipo
   when 'frequencia'
-    inicio = params['inicio'] ? Date.parse(params['inicio']) : Date.today.beginning_of_month
+    inicio = params['inicio'] ? Date.parse(params['inicio']) : beginning_of_month
     fim = params['fim'] ? Date.parse(params['fim']) : Date.today
     
     @relatorio = Aluno.relatorio_frequencia(inicio, fim)
@@ -338,7 +359,7 @@ get '/relatorios/:tipo' do
       
       csv = ["Nome,Presenças,Faltas,Total de Aulas,Taxa de Frequência (%)"]
       @relatorio.each do |r|
-        csv << "#{r[:nome]},#{r[:presencas]},#{r[:faltas]},#{r[:total_aulas]},#{r[:taxa_frequencia]}"
+        csv << "#{sanitize_csv(r[:nome])},#{r[:presencas]},#{r[:faltas]},#{r[:total_aulas]},#{r[:taxa_frequencia]}"
       end
       
       return csv.join("\n")
@@ -354,7 +375,7 @@ get '/relatorios/:tipo' do
       
       csv = ["Nome,Modalidade,Valor Mensalidade,Status,Último Pagamento,Dias Atraso"]
       @relatorio.each do |r|
-        csv << "#{r[:nome]},#{r[:modalidade]},#{r[:valor_mensalidade]},#{r[:status]},#{r[:ultimo_pagamento]},#{r[:dias_atraso]}"
+        csv << "#{sanitize_csv(r[:nome])},#{sanitize_csv(r[:modalidade])},#{r[:valor_mensalidade]},#{r[:status]},#{r[:ultimo_pagamento]},#{r[:dias_atraso]}"
       end
       
       return csv.join("\n")
@@ -574,6 +595,21 @@ end
 
 # Rotas para pagamentos
 post '/pagamentos' do
+  # Validar se aluno_id é válido
+  unless valid_id?(params['aluno_id'])
+    session[:mensagem_erro] = "ID do aluno inválido."
+    redirect '/'
+    return
+  end
+  
+  # Verificar se o aluno existe
+  aluno = Aluno.buscar_por_id(params['aluno_id'])
+  unless aluno
+    session[:mensagem_erro] = "Aluno não encontrado."
+    redirect '/'
+    return
+  end
+  
   erros = validar_pagamento(params)
   
   if erros.any?
@@ -611,6 +647,21 @@ end
 
 # Rotas para graduações
 post '/graduacoes' do
+  # Validar se aluno_id é válido
+  unless valid_id?(params['aluno_id'])
+    session[:mensagem_erro] = "ID do aluno inválido."
+    redirect '/'
+    return
+  end
+  
+  # Verificar se o aluno existe
+  aluno = Aluno.buscar_por_id(params['aluno_id'])
+  unless aluno
+    session[:mensagem_erro] = "Aluno não encontrado."
+    redirect '/'
+    return
+  end
+  
   erros = validar_graduacao(params)
   
   if erros.any?
