@@ -65,67 +65,85 @@ class Assinatura
   
   def self.contar_por_status(status_texto)
     with_db do |client|
-      count = 0
-      assinaturas = client.exec("SELECT id FROM assinaturas WHERE status = 'ativa'").to_a
-      
-      assinaturas.each do |assinatura|
-        status_info = verificar_status(assinatura['id'])
-        count += 1 if status_info[:status] == status_texto
-      end
-
-      count
+      # Query única otimizada - evita N+1
+      query = <<~SQL
+        SELECT COUNT(*) as count
+        FROM assinaturas a
+        LEFT JOIN (
+          SELECT assinatura_id, MAX(data_pagamento) as ultimo_pagamento
+          FROM pagamentos
+          GROUP BY assinatura_id
+        ) p ON a.id = p.assinatura_id
+        WHERE a.status = 'ativa'
+        AND CASE 
+          WHEN $1 = 'Atrasado' THEN 
+            p.ultimo_pagamento IS NOT NULL AND (p.ultimo_pagamento + INTERVAL '30 days') < CURRENT_DATE
+          WHEN $1 = 'Em Dia' THEN 
+            p.ultimo_pagamento IS NOT NULL AND (p.ultimo_pagamento + INTERVAL '30 days') >= CURRENT_DATE
+          WHEN $1 = 'Pendente' THEN 
+            p.ultimo_pagamento IS NULL
+          ELSE FALSE
+        END
+      SQL
+      client.exec_params(query, [status_texto]).first['count'].to_i
     end
   end
 
   def self.relatorio_mensalidades
     with_db do |client|
-      resultados = []
-      
-      # Buscar todas as assinaturas ativas com dados do aluno
+      # Query única otimizada - evita N+1
       query = <<~SQL
-        SELECT a.id as assinatura_id, a.valor_mensalidade, a.status,
-               al.id as aluno_id, al.nome, al.modalidade
+        SELECT 
+          a.id as assinatura_id, 
+          a.valor_mensalidade, 
+          a.status,
+          al.id as aluno_id, 
+          al.nome, 
+          al.modalidade,
+          p.ultimo_pagamento,
+          CASE 
+            WHEN p.ultimo_pagamento IS NULL THEN 'Pendente'
+            WHEN (p.ultimo_pagamento + INTERVAL '30 days') < CURRENT_DATE THEN 'Atrasado'
+            ELSE 'Em Dia'
+          END as status_pagamento,
+          CASE 
+            WHEN p.ultimo_pagamento IS NULL THEN 'status-pendente'
+            WHEN (p.ultimo_pagamento + INTERVAL '30 days') < CURRENT_DATE THEN 'status-atrasado'
+            ELSE 'status-em-dia'
+          END as cor_status,
+          CASE 
+            WHEN p.ultimo_pagamento IS NULL THEN 0
+            WHEN (p.ultimo_pagamento + INTERVAL '30 days') < CURRENT_DATE THEN 
+              EXTRACT(DAY FROM CURRENT_DATE - (p.ultimo_pagamento + INTERVAL '30 days'))::int
+            ELSE 0
+          END as dias_atraso
         FROM assinaturas a
         JOIN alunos al ON a.aluno_id = al.id
-        WHERE a.status = 'ativa'
+        LEFT JOIN (
+          SELECT assinatura_id, MAX(data_pagamento) as ultimo_pagamento
+          FROM pagamentos
+          GROUP BY assinatura_id
+        ) p ON a.id = p.assinatura_id
+        WHERE a.status = 'ativa' AND al.deleted_at IS NULL
         ORDER BY al.nome
       SQL
       
-      assinaturas = client.exec(query).to_a
-      
-      assinaturas.each do |assinatura|
-        # Buscar último pagamento
-        ultimo_pag = client.exec_params(
-          "SELECT data_pagamento FROM pagamentos WHERE assinatura_id = $1 ORDER BY data_pagamento DESC LIMIT 1",
-          [assinatura['assinatura_id']]
-        ).first
+      client.exec(query).to_a.map do |row|
+        ultimo_pag_str = row['ultimo_pagamento'] ? 
+          Date.parse(row['ultimo_pagamento']).strftime('%d/%m/%Y') : 
+          'Nunca'
         
-        status_info = verificar_status(assinatura['assinatura_id'])
-        
-        # Calcular dias de atraso
-        dias_atraso = 0
-        ultimo_pagamento_str = 'Nunca'
-        
-        if ultimo_pag
-          data_pag = Date.parse(ultimo_pag['data_pagamento'])
-          ultimo_pagamento_str = data_pag.strftime('%d/%m/%Y')
-          vencimento = data_pag + 30
-          dias_atraso = (Date.today - vencimento).to_i if Date.today > vencimento
-        end
-        
-        resultados << {
-          aluno_id: assinatura['aluno_id'],
-          nome: assinatura['nome'],
-          modalidade: assinatura['modalidade'] || 'Jiu Jitsu',
-          valor_mensalidade: assinatura['valor_mensalidade'].to_f,
-          status: status_info[:status],
-          cor_status: status_info[:cor],
-          ultimo_pagamento: ultimo_pagamento_str,
-          dias_atraso: [dias_atraso, 0].max
+        {
+          aluno_id: row['aluno_id'],
+          nome: row['nome'],
+          modalidade: row['modalidade'] || 'Jiu Jitsu',
+          valor_mensalidade: row['valor_mensalidade'].to_f,
+          status: row['status_pagamento'],
+          cor_status: row['cor_status'],
+          ultimo_pagamento: ultimo_pag_str,
+          dias_atraso: [row['dias_atraso'].to_i, 0].max
         }
       end
-      
-      resultados
     end
   end
 end

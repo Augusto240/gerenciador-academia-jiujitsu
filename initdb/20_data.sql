@@ -1,8 +1,8 @@
 -- --- DADOS DE EXEMPLO PARA DESENVOLVIMENTO LOCAL ---
 
--- Adiciona um usuário padrão
+-- Adiciona um usuário padrão (senha: admin123)
 INSERT INTO usuarios (email, nome, password_digest) VALUES
-('admin@jpteam.com', 'Admin JPM', '$2a$12$4a.ODd3/OT2u2K.2gG7yE.cwkFP7aVz0qtlB6nflhN4uY1S0v1u.S')
+('admin@jpteam.com', 'Admin JPM', '$2a$12$U9kH1OCMLLvQqILDLss.9OIps.1ke16r3eLJeq26GoKnrrhnFwF/W')
 ON CONFLICT (email) DO NOTHING;
 
 INSERT INTO planos (id, nome, valor) VALUES (1, 'Plano Padrão', 70.00) ON CONFLICT (id) DO NOTHING;

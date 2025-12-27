@@ -42,7 +42,10 @@
                   <%= h notif['mensagem'] %>
                 </div>
                 <div class="notificacao-actions">
-                  <a href="/notificacoes/<%= notif['id'] %>/marcar-como-lida" class="btn-small btn-secondary">✓ Marcar como lida</a>
+                  <form action="/notificacoes/<%= notif['id'] %>/marcar-como-lida" method="post" style="display:inline;">
+                    <%= Rack::Csrf.csrf_tag(env) %>
+                    <button type="submit" class="btn-small btn-secondary">✓ Marcar como lida</button>
+                  </form>
                 </div>
               </div>
             <% end %>

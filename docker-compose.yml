@@ -11,11 +11,11 @@ services:
       - .env
     environment:
       - DATABASE_HOST=${DATABASE_HOST:-db}
-      - DATABASE_USER=${DATABASE_USER:-jiujitsu_user}
-      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-senha_forte_123}
-      - DATABASE_NAME=${DATABASE_NAME:-academia_jiujitsu_dev}
+      - DATABASE_USER=${DATABASE_USER}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      - DATABASE_NAME=${DATABASE_NAME}
       - RACK_ENV=${RACK_ENV:-development}
-      - SESSION_SECRET=${SESSION_SECRET:-dev_secret_change_in_production_12345678901234567890}
+      - SESSION_SECRET=${SESSION_SECRET}
     depends_on:
       - db
 
@@ -25,9 +25,9 @@ services:
     ports:
       - "5433:5432" 
     environment:
-      POSTGRES_USER: ${DATABASE_USER:-jiujitsu_user}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-senha_forte_123}
-      POSTGRES_DB: ${DATABASE_NAME:-academia_jiujitsu_dev}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./initdb:/docker-entrypoint-initdb.d

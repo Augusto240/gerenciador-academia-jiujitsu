@@ -190,6 +190,15 @@ helpers do
     id.to_s.match?(/\A\d+\z/) && id.to_i > 0
   end
   
+  # Helper para verificar se usuário é admin
+  def admin?
+    return false unless logged_in?
+    user = current_user
+    return false unless user
+    # Suporta tanto boolean quanto string 't'/'f' do PostgreSQL
+    user['admin'] == true || user['admin'] == 't' || user['admin'] == 'true'
+  end
+  
   # Helper para sanitizar valores CSV (previne CSV Injection)
   # Valores que começam com =, +, -, @ podem executar fórmulas no Excel
   def sanitize_csv(value)
@@ -556,19 +565,20 @@ get '/aulas/:id' do
 end
 
 # Rota para marcar notificação como lida
-get '/notificacoes/:id/marcar-como-lida' do
+post '/notificacoes/:id/marcar-como-lida' do
+  unless valid_id?(params['id'])
+    halt 400, 'ID inválido'
+  end
   Notificacao.marcar_como_lida(params['id'])
   redirect back
 end
 
-get '/gerar-notificacoes' do
-  if logged_in? && current_user['admin'] == 't'
-    Notificacao.gerar_notificacoes_automaticas
-    redirect back
-  else
-    status 403
-    "Acesso negado"
+post '/gerar-notificacoes' do
+  unless logged_in? && admin?
+    halt 403, "Acesso negado"
   end
+  Notificacao.gerar_notificacoes_automaticas
+  redirect back
 end
 
 post '/aulas/:id/presencas' do
