@@ -241,7 +241,8 @@ before do
           'X-Content-Type-Options' => 'nosniff',
           'X-XSS-Protection' => '1; mode=block',
           'Referrer-Policy' => 'strict-origin-when-cross-origin',
-          'Permissions-Policy' => 'geolocation=(), microphone=(), camera=()'
+          'Permissions-Policy' => 'geolocation=(), microphone=(), camera=()',
+          'Content-Security-Policy' => "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' data:; connect-src 'self'"
   
   if ENV['RACK_ENV'] == 'production'
     headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
@@ -645,6 +646,40 @@ get '/aulas/:id' do
   erb :'aulas/show'
 end
 
+# Rota para excluir aula (apenas admin)
+delete '/aulas/:id' do
+  unless valid_id?(params['id'])
+    halt 400, 'ID inválido'
+  end
+  
+  unless admin?
+    session[:mensagem_erro] = "Apenas administradores podem excluir aulas."
+    redirect '/aulas'
+    return
+  end
+  
+  begin
+    with_db do |client|
+      # Excluir presenças associadas primeiro
+      client.exec_params("DELETE FROM presencas WHERE aula_id = $1", [params['id']])
+      # Excluir a aula
+      result = client.exec_params("DELETE FROM aulas WHERE id = $1 RETURNING id", [params['id']])
+      
+      if result.ntuples > 0
+        log_action("Excluiu aula", { id: params['id'] })
+        session[:mensagem_sucesso] = "Aula excluída com sucesso!"
+      else
+        session[:mensagem_erro] = "Aula não encontrada."
+      end
+    end
+  rescue => e
+    logger.error("Erro ao excluir aula: #{e.message}")
+    session[:mensagem_erro] = "Erro ao excluir aula."
+  end
+  
+  redirect '/aulas'
+end
+
 # Rota para marcar notificação como lida
 post '/notificacoes/:id/marcar-como-lida' do
   unless valid_id?(params['id'])
@@ -663,6 +698,11 @@ post '/gerar-notificacoes' do
 end
 
 post '/aulas/:id/presencas' do
+  # Validar ID antes de processar
+  unless valid_id?(params['id'])
+    halt 400, "ID de aula inválido"
+  end
+  
   begin
     result = AulaService.atualizar_presencas(params['id'], params['presentes'] || [])
     
@@ -828,6 +868,6 @@ get '/dashboard' do
   @mensalidades_atrasadas = Assinatura.contar_por_status("Atrasado")
   @mensalidades_em_dia = Assinatura.contar_por_status("Em Dia")
   
-  Notificacao.gerar_notificacoes_automaticas
+  # Notificações são geradas via POST /gerar-notificacoes (não em GET para evitar efeitos colaterais)
   erb :dashboard
 end

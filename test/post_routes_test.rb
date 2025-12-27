@@ -185,4 +185,43 @@ class PostRoutesTest < Minitest::Test
     # Retorna CSV (pode ter vários status dependendo dos dados)
     assert [200, 302, 404, 500].include?(last_response.status)
   end
+  
+  # ==========================================
+  # TESTES DE DELETE AULA
+  # ==========================================
+  
+  def test_delete_aula_requer_autenticacao
+    # DELETE sem autenticação deve falhar por CSRF
+    assert_raises(Rack::Csrf::InvalidCsrfToken) do
+      delete '/aulas/1'
+    end
+  end
+  
+  def test_delete_aula_com_id_invalido
+    login_as_admin
+    csrf = get_csrf_token('/aulas/nova')
+    
+    # Simular DELETE via POST com _method
+    post '/aulas/abc', { _method: 'DELETE', _csrf: csrf }
+    assert_equal 400, last_response.status
+  end
+  
+  # ==========================================
+  # TESTES DE ATUALIZAÇÃO DE ALUNO
+  # ==========================================
+  
+  def test_formulario_editar_aluno_carrega
+    login_as_admin
+    # Precisamos de um aluno existente, então verificamos se a rota responde
+    # Para ID inexistente, deve redirecionar ou 404
+    get '/editar-aluno/999999'
+    assert [302, 404].include?(last_response.status)
+  end
+  
+  def test_atualizar_aluno_sem_csrf_falha
+    login_as_admin
+    assert_raises(Rack::Csrf::InvalidCsrfToken) do
+      post '/alunos/1', { _method: 'PUT', nome: 'Teste Atualizado' }
+    end
+  end
 end
