@@ -74,6 +74,11 @@ end
 
 Rack::Attack.cache.store ||= MemoryStore.new
 
+# Desabilitar rate limiting em ambiente de teste
+Rack::Attack.safelist('allow from test environment') do |req|
+  ENV['RACK_ENV'] == 'test'
+end
+
 # Limitar tentativas de login: 5 por minuto por IP
 Rack::Attack.throttle('login attempts per ip', limit: 5, period: 60) do |req|
   req.ip if req.path == '/login' && req.post?
