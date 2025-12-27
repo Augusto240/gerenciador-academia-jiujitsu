@@ -82,8 +82,71 @@
     </footer>
     
     <!-- Feedback de loading em formulários (previne double-submit) -->
+    <!-- Modal de Confirmação Customizado -->
+    <div id="modal-confirm" class="modal-overlay" style="display: none;">
+      <div class="modal-box">
+        <h3 id="modal-title">⚠️ Confirmar Ação</h3>
+        <p id="modal-message">Tem certeza que deseja continuar?</p>
+        <div class="modal-actions">
+          <button id="modal-cancel" class="btn-secondary">Cancelar</button>
+          <button id="modal-confirm-btn" class="btn-danger">Confirmar</button>
+        </div>
+      </div>
+    </div>
+    
     <script>
+      // Modal de confirmação customizado
+      const modal = document.getElementById('modal-confirm');
+      const modalTitle = document.getElementById('modal-title');
+      const modalMessage = document.getElementById('modal-message');
+      const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+      const modalCancelBtn = document.getElementById('modal-cancel');
+      
+      let pendingForm = null;
+      
+      function showConfirmModal(title, message, form) {
+        modalTitle.textContent = title;
+        modalMessage.textContent = message;
+        pendingForm = form;
+        modal.style.display = 'flex';
+      }
+      
+      modalCancelBtn.addEventListener('click', function() {
+        modal.style.display = 'none';
+        pendingForm = null;
+      });
+      
+      modalConfirmBtn.addEventListener('click', function() {
+        modal.style.display = 'none';
+        if (pendingForm) {
+          pendingForm.dataset.confirmed = 'true';
+          pendingForm.submit();
+        }
+      });
+      
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          modal.style.display = 'none';
+          pendingForm = null;
+        }
+      });
+      
+      // Interceptar formulários com data-confirm
       document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('form[data-confirm]').forEach(function(form) {
+          form.addEventListener('submit', function(e) {
+            if (form.dataset.confirmed !== 'true') {
+              e.preventDefault();
+              showConfirmModal(
+                form.dataset.confirmTitle || '⚠️ Confirmar Ação',
+                form.dataset.confirm,
+                form
+              );
+            }
+          });
+        });
+        
+        // Feedback de loading em formulários
         document.querySelectorAll('form').forEach(function(form) {
           form.addEventListener('submit', function(e) {
             const btn = form.querySelector('button[type="submit"], input[type="submit"]');

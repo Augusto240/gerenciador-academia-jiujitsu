@@ -126,6 +126,57 @@ Para parar todo o ambiente, basta voltar ao terminal e pressionar `Ctrl` + `C`.
 * **Service Objects:** Encapsula operações complexas de negócio em classes dedicadas e reutilizáveis.
 * **Connection Pool:** Gerencia eficientemente as conexões com o banco de dados para melhor performance.
 
+## 📚 Documentação de Rotas (API)
+
+### Autenticação
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/login` | Página de login |
+| POST | `/login` | Autenticar usuário (email, password) |
+| POST | `/logout` | Encerrar sessão |
+
+### Alunos
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/` | Lista de alunos (com filtros: busca, faixa, turma, modalidade) |
+| GET | `/alunos/novo` | Formulário de novo aluno |
+| POST | `/alunos` | Criar aluno |
+| GET | `/alunos/:id` | Detalhes do aluno |
+| GET | `/alunos/:id/editar` | Formulário de edição |
+| PUT | `/alunos/:id` | Atualizar aluno |
+| DELETE | `/alunos/:id` | Excluir aluno (soft delete) |
+| GET | `/alunos-excluidos` | Lista de alunos excluídos (admin) |
+| POST | `/alunos/:id/restaurar` | Restaurar aluno excluído |
+
+### Aulas
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/aulas` | Lista de aulas (com filtros: data_inicio, data_fim, turma_filtro) |
+| GET | `/aulas/nova` | Formulário de nova aula |
+| POST | `/aulas` | Criar aula |
+| GET | `/aulas/:id` | Detalhes e lista de presença |
+| POST | `/aulas/:id/presencas` | Atualizar presenças |
+
+### Pagamentos e Graduações
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| POST | `/pagamentos` | Registrar pagamento |
+| POST | `/graduacoes` | Registrar graduação |
+
+### Relatórios
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/relatorios` | Lista de relatórios disponíveis |
+| GET | `/relatorios/frequencia` | Relatório de frequência (formato: html/csv) |
+| GET | `/relatorios/mensalidades` | Relatório de mensalidades (formato: html/csv) |
+
+### Outros
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/dashboard` | Dashboard com estatísticas |
+| GET | `/health` | Health check (JSON) |
+| POST | `/notificacoes/:id/marcar-como-lida` | Marcar notificação como lida |
+
 ## Executando os Testes
 
 ```bash

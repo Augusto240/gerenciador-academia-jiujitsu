@@ -576,7 +576,12 @@ end
 # Rotas para aulas
 get '/aulas' do
   pagina = params[:pagina]&.to_i || 1
-  result = Aula.todas(pagina, 20)
+  filtros = {
+    data_inicio: params[:data_inicio],
+    data_fim: params[:data_fim],
+    turma: params[:turma_filtro]
+  }
+  result = Aula.todas(pagina, 20, filtros)
   
   @aulas = result[:aulas]
   @pagina_atual = result[:pagina_atual]

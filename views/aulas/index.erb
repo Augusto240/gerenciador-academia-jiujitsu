@@ -74,6 +74,26 @@
 
 <section class="list-section card">
   <h2>📋 Aulas Registradas</h2>
+  
+  <!-- Filtro de busca -->
+  <form action="/aulas" method="GET" class="filter-form" style="margin-bottom: 20px;">
+    <input type="date" name="data_inicio" placeholder="Data Início" value="<%= params[:data_inicio] %>">
+    <input type="date" name="data_fim" placeholder="Data Fim" value="<%= params[:data_fim] %>">
+    <select name="turma_filtro">
+      <option value="">Todas as Turmas</option>
+      <% @turmas.each do |t| %>
+        <option value="<%= t %>" <%= 'selected' if params[:turma_filtro] == t %>><%= t %></option>
+      <% end %>
+      <% @turmas_muay_thai.each do |t| %>
+        <option value="<%= t %>" <%= 'selected' if params[:turma_filtro] == t %>><%= t %></option>
+      <% end %>
+    </select>
+    <div class="button-group">
+      <button type="submit" class="btn-primary">🔍 Filtrar</button>
+      <a href="/aulas" class="btn-secondary">✖ Limpar</a>
+    </div>
+  </form>
+  
   <div class="table-container">
     <table>
       <thead>

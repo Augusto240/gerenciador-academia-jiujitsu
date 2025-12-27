@@ -1,4 +1,6 @@
 class Aluno
+  extend Validador  # Incluir helpers para reutilizar calcular_idade
+  
   # Sanitiza caracteres especiais do LIKE para evitar wildcards maliciosos
   def self.sanitize_like(value)
     value.to_s.gsub(/[%_\\]/) { |c| "\\#{c}" }
@@ -62,16 +64,13 @@ class Aluno
 
       result = client.exec_params(query, params_list).to_a
       
-      # Calcular idade para cada aluno
+      # Calcular idade para cada aluno usando helper compartilhado
       result.each do |aluno|
-        hoje = Date.today
         data_nasc_str = aluno['data_nascimento']
         if data_nasc_str && !data_nasc_str.empty?
           begin
             data_nasc_obj = Date.parse(data_nasc_str)
-            idade = hoje.year - data_nasc_obj.year
-            idade -= 1 if hoje < Date.new(hoje.year, data_nasc_obj.month, data_nasc_obj.day)
-            aluno['idade'] = idade
+            aluno['idade'] = calcular_idade(data_nasc_obj)
           rescue Date::Error
             aluno['idade'] = 'Inválida'
           end

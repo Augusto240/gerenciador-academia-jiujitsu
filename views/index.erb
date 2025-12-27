@@ -132,7 +132,9 @@
                       <td class="actions">
                       <a href="/alunos/<%= aluno['id'] %>" class="btn-ver" title="Ver detalhes">👁 Ver</a>
                       <a href="/alunos/<%= aluno['id'] %>/editar" class="btn-editar">✏ Editar</a>
-                      <form action="/alunos/<%= aluno['id'] %>" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja remover este aluno?');">
+                      <form action="/alunos/<%= aluno['id'] %>" method="POST" style="display:inline;" 
+                            data-confirm="Tem certeza que deseja remover o aluno <%= h aluno['nome'] %>? Esta ação pode ser desfeita em 'Ver Excluídos'."
+                            data-confirm-title="🗑️ Remover Aluno">
                           <%= csrf_tag %>
                           <input type="hidden" name="_method" value="DELETE">
                           <button type="submit" class="btn-remover">🗑 Remover</button>
