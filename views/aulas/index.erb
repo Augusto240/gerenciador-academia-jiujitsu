@@ -1,26 +1,28 @@
 <header>
-  <h1>Aulas e Presença</h1>
+  <img src="/logo.png" alt="Logo JPM Team" class="logo">
+  <h1>🥋 Aulas e Presença</h1>
+  <p class="subtitle">Registre aulas e controle presenças</p>
 </header>
 
 <section class="card form-section">
-  <h2>Registrar Nova Aula</h2>
+  <h2>➕ Registrar Nova Aula</h2>
   <form action="/aulas" method="POST">
     <%= csrf_tag %>
-    <label for="data_aula">Data da Aula:</label>
+    <label for="data_aula">📅 Data da Aula:</label>
     <input type="date" name="data_aula" value="<%= Date.today.strftime('%Y-%m-%d') %>" required>
 
-    <label for="modalidade_aula">Modalidade:</label>
+    <label for="modalidade_aula">🥋 Modalidade:</label>
     <select name="modalidade" id="modalidade_aula" onchange="atualizarTurmasAula()">
       <% @modalidades.each do |mod| %>
         <option value="<%= mod %>"><%= mod %></option>
       <% end %>
     </select>
 
-    <label for="descricao">Descrição (opcional):</label>
+    <label for="descricao">📝 Descrição (opcional):</label>
     <input type="text" name="descricao" placeholder="Ex: Treino de Passagem de Guarda">
 
     <div id="turma-container">
-      <label for="turma">Para qual turma?</label>
+      <label for="turma">👥 Para qual turma?</label>
       <select name="turma" id="turma">
         <option value="">— Escolha uma turma —</option>
         <% @turmas.each do |t| %>
@@ -36,7 +38,7 @@
       </label>
     </div>
 
-    <button type="submit">Criar Aula e Abrir Lista de Presença</button>
+    <button type="submit" class="btn-primary">✓ Criar Aula e Abrir Lista de Presença</button>
   </form>
 
   <script>
@@ -71,32 +73,33 @@
 </section>
 
 <section class="list-section card">
-  <h2>Aulas Registradas</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Data</th>
-        <th>Modalidade</th>
-        <th>Turma</th>
-        <th>Descrição</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @aulas.each do |aula| %>
-        <% da = aula['data_aula'].is_a?(String) ? Date.parse(aula['data_aula']) : aula['data_aula'] %>
+  <h2>📋 Aulas Registradas</h2>
+  <div class="table-container">
+    <table>
+      <thead>
         <tr>
-          <td><%= da.strftime('%d/%m/%Y') %></td>
-          <td><%= h(aula['modalidade'] || 'Jiu Jitsu') %></td>
-          <td><%= h(aula['turma'] || '—') %></td>
-          <td><%= h aula['descricao'] %></td>
-          <td>
-            <a href="/aulas/<%= aula['id'] %>" class="btn-editar">
-              Ver / Editar Presença
-            </a>
-          </td>
+          <th>📅 Data</th>
+          <th>🥋 Modalidade</th>
+          <th>👥 Turma</th>
+          <th>📝 Descrição</th>
+          <th>⚙️ Ações</th>
         </tr>
-      <% end %>
-    </tbody>
+      </thead>
+      <tbody>
+        <% @aulas.each do |aula| %>
+          <% da = aula['data_aula'].is_a?(String) ? Date.parse(aula['data_aula']) : aula['data_aula'] %>
+          <tr>
+            <td><strong><%= da.strftime('%d/%m/%Y') %></strong></td>
+            <td><%= h(aula['modalidade'] || 'Jiu Jitsu') %></td>
+            <td><%= h(aula['turma'] || '—') %></td>
+            <td><%= h aula['descricao'] %></td>
+            <td>
+              <a href="/aulas/<%= aula['id'] %>" class="btn-editar">
+                ✏ Ver / Editar Presença
+              </a>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
   </table>
 </section>

@@ -2,10 +2,11 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - Gerenciador JPM Team</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
   <style>
     body { 
@@ -13,7 +14,7 @@
       justify-content: center; 
       align-items: center; 
       min-height: 100vh; 
-      background-color: #e9ecef;
+      background: linear-gradient(135deg, #1A1A1A 0%, #2D2D2D 100%);
       margin: 0;
       padding: 20px;
       box-sizing: border-box;
@@ -22,8 +23,9 @@
 </head>
 <body>
   <div class="login-container">
-    <img src="/logo.png" alt="Logo da Academia" class="logo">
-    <h1>Acesso ao Sistema</h1>
+    <img src="/logo.png" alt="Logo JPM Team" class="logo">
+    <h1>🥋 JPM Team NF</h1>
+    <p>Sistema de Gestão da Academia</p>
     
     <% if session[:mensagem_erro] %>
       <div class="alert-erro"><%= session.delete(:mensagem_erro) %></div>
@@ -35,11 +37,14 @@
 
     <form action="/login" method="POST">
       <%= Rack::Csrf.csrf_tag(env) %>
-      <label for="email">Email</label>
-      <input type="email" id="email" name="email" required autocomplete="email">
-      <label for="password">Senha</label>
-      <input type="password" id="password" name="password" required autocomplete="current-password">
-      <button type="submit">Entrar</button>
+      
+      <label for="email">📧 Email</label>
+      <input type="email" id="email" name="email" placeholder="seu@email.com" required autocomplete="email">
+      
+      <label for="password">🔒 Senha</label>
+      <input type="password" id="password" name="password" placeholder="Sua senha" required autocomplete="current-password">
+      
+      <button type="submit">Entrar no Sistema</button>
     </form>
   </div>
 </body>

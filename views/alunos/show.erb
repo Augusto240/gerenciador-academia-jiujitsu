@@ -1,26 +1,28 @@
 <% presenter = AlunoPresenter.new(@aluno) %>
 
 <header>
-  <h1>Detalhes de: <%= h presenter.nome %></h1>
-  <a href="/" class="btn-voltar">Voltar para a Lista</a>
+  <img src="/logo.png" alt="Logo JPM Team" class="logo">
+  <h1>👤 <%= h presenter.nome %></h1>
+  <p class="subtitle">Detalhes do Aluno</p>
+  <a href="/" class="btn-secondary">⬅ Voltar para a Lista</a>
 </header>
 
 <div class="aluno-detalhes-grid">
   <section class="card">
-    <h2>Dados Cadastrais</h2>
+    <h2>📋 Dados Cadastrais</h2>
     <p><strong>Nome:</strong> <%= h presenter.nome %></p>
-    <p><strong>Status:</strong> <%= h presenter.status %></p>
+    <p><strong>Status:</strong> <span class="status-mensalidade <%= presenter.status == 'Ativo' ? 'status-em-dia' : 'status-inativo' %>"><%= h presenter.status %></span></p>
     <p><strong>Modalidade:</strong> <%= h @aluno['modalidade'] || 'Jiu Jitsu' %></p>
     <p><strong>Data de Nascimento:</strong> <%= h presenter.data_nascimento_formatada %></p>
     <p><strong>Idade:</strong> <%= h presenter.idade %> anos</p>
-    <p><strong>Faixa Atual:</strong> <%= h presenter.cor_faixa %></p>
+    <p><strong>Faixa Atual:</strong> 🥋 <%= h presenter.cor_faixa %></p>
     <p><strong>Turma:</strong> <%= h presenter.turma %></p>
     <br>
-    <a href="/alunos/<%= presenter.id %>/editar" class="btn-editar">Editar Dados</a>
+    <a href="/alunos/<%= presenter.id %>/editar" class="btn-editar">✏ Editar Dados</a>
   </section>
   
   <section class="card">
-    <h2>Anamnese</h2>
+    <h2>🏥 Anamnese</h2>
     <p><strong>Problema de saúde:</strong> <%= h presenter.problema_saude %></p>
     <p><strong>Uso de medicação:</strong> <%= h presenter.uso_medicacao %></p>
     <p><strong>Histórico de lesões:</strong> <%= h presenter.historico_lesoes %></p>
@@ -28,66 +30,68 @@
   </section>
 
   <section class="card">
-    <h2>Mensalidades</h2>
+    <h2>💰 Mensalidades</h2>
     <% if @assinatura %>
       <p>
         <strong>Status:</strong>
         <span class="status-mensalidade <%= @cor_status %>"><%= @status_mensalidade %></span>
       </p>
 
-      <h3 class="form-title">Registrar Novo Pagamento</h3>
+      <h3 class="form-title">➕ Registrar Novo Pagamento</h3>
       <form action="/pagamentos" method="POST">
         <%= csrf_tag %>
         <input type="hidden" name="assinatura_id" value="<%= @assinatura['id'] %>">
         <input type="hidden" name="aluno_id" value="<%= @aluno['id'] %>">
 
-        <label for="valor_pago">Valor Pago (R$):</label>
+        <label for="valor_pago">💵 Valor Pago (R$):</label>
         <input type="number" step="0.01" name="valor_pago" value="<%= @assinatura['valor_mensalidade'] %>" required>
 
-        <label for="data_pagamento">Data do Pagamento:</label>
+        <label for="data_pagamento">📅 Data do Pagamento:</label>
         <input type="date" name="data_pagamento" value="<%= Date.today.strftime('%Y-%m-%d') %>" required>
 
-        <button type="submit">Registrar Pagamento</button>
+        <button type="submit" class="btn-primary">✓ Registrar Pagamento</button>
       </form>
 
-      <h3>Histórico de Pagamentos</h3>
+      <h3 class="form-title">📜 Histórico de Pagamentos</h3>
       <% if @historico_pagamentos.any? %>
-        <table>
-          <thead>
-            <tr><th>Data</th><th>Valor</th></tr>
-          </thead>
-          <tbody>
-            <% @historico_pagamentos.each do |pag| %>
-              <% dp = Date.parse(pag['data_pagamento']) rescue nil %>
-              <tr>
-                <td><%= dp ? dp.strftime('%d/%m/%Y') : 'Inválida' %></td>
-                <td>R$ <%= '%.2f' % pag['valor_pago'] %></td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr><th>📅 Data</th><th>💵 Valor</th></tr>
+            </thead>
+            <tbody>
+              <% @historico_pagamentos.each do |pag| %>
+                <% dp = Date.parse(pag['data_pagamento']) rescue nil %>
+                <tr>
+                  <td><%= dp ? dp.strftime('%d/%m/%Y') : 'Inválida' %></td>
+                  <td><strong>R$ <%= '%.2f' % pag['valor_pago'] %></strong></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
       <% else %>
-        <p>Nenhum pagamento registrado.</p>
+        <p class="empty-state">Nenhum pagamento registrado.</p>
       <% end %>
     <% else %>
-      <p>Este aluno não possui uma assinatura ativa.</p>
+      <p class="empty-state">Este aluno não possui uma assinatura ativa.</p>
     <% end %>
   </section>
 
   <section class="card">
-    <h2>Histórico de Graduação</h2>
-    <h3 class="form-title">Registrar Nova Graduação</h3>
+    <h2>🏆 Histórico de Graduação</h2>
+    <h3 class="form-title">➕ Registrar Nova Graduação</h3>
     <form action="/graduacoes" method="POST">
       <%= csrf_tag %>
       <input type="hidden" name="aluno_id" value="<%= @aluno['id'] %>">
 
-      <label for="faixa">Nova Faixa/Grau:</label>
-      <input type="text" name="faixa" required>
+      <label for="faixa">🥋 Nova Faixa/Grau:</label>
+      <input type="text" name="faixa" placeholder="Ex: Faixa Azul" required>
 
-      <label for="data_graduacao">Data:</label>
+      <label for="data_graduacao">📅 Data:</label>
       <input type="date" name="data_graduacao" value="<%= Date.today.strftime('%Y-%m-%d') %>" required>
 
-      <button type="submit">Registrar</button>
+      <button type="submit" class="btn-primary">✓ Registrar</button>
     </form>
 
     <% if @graduacoes.any? %>
@@ -95,20 +99,20 @@
         <% @graduacoes.each do |g| %>
           <% dg = Date.parse(g['data_graduacao']) rescue nil %>
           <li>
-            <%= h g['faixa'] %> em <%= dg ? dg.strftime('%d/%m/%Y') : 'Inválida' %>
+            🥋 <%= h g['faixa'] %> em <%= dg ? dg.strftime('%d/%m/%Y') : 'Inválida' %>
           </li>
         <% end %>
       </ul>
     <% else %>
-      <p>Nenhuma graduação registrada.</p>
+      <p class="empty-state">Nenhuma graduação registrada.</p>
     <% end %>
   </section>
 
   <section class="card">
-    <h2>Histórico de Presença</h2>
-    <p><strong>Total de Aulas:</strong> <%= @estatisticas_presenca[:total_aulas] %></p>
-    <p><strong>Presenças:</strong> <%= @estatisticas_presenca[:presencas] %></p>
-    <p><strong>Faltas:</strong> <%= @estatisticas_presenca[:faltas] %></p>
+    <h2>📊 Histórico de Presença</h2>
+    <p><strong>Total de Aulas:</strong> <span class="highlight"><%= @estatisticas_presenca[:total_aulas] %></span></p>
+    <p><strong>✅ Presenças:</strong> <span class="highlight"><%= @estatisticas_presenca[:presencas] %></span></p>
+    <p><strong>❌ Faltas:</strong> <span class="highlight"><%= @estatisticas_presenca[:faltas] %></span></p>
     <p>O registro de presença é feito na <a href="/aulas">página de Aulas</a>.</p>
   </section>
 

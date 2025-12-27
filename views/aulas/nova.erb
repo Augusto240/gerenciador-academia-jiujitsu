@@ -1,27 +1,29 @@
 <header>
-  <h1>Registrar Nova Aula</h1>
-  <a href="/aulas" class="btn-voltar">Voltar para a Lista</a>
+  <img src="/logo.png" alt="Logo JPM Team" class="logo">
+  <h1>➕ Registrar Nova Aula</h1>
+  <p class="subtitle">Crie uma aula e registre presenças</p>
+  <a href="/aulas" class="btn-secondary">⬅ Voltar para a Lista</a>
 </header>
 
 <section class="card form-section">
-  <h2>Detalhes da Aula</h2>
+  <h2>📋 Detalhes da Aula</h2>
   <form action="/aulas" method="POST">
     <%= csrf_tag %>
-    <label for="data_aula">Data da Aula:</label>
+    <label for="data_aula">📅 Data da Aula:</label>
     <input type="date" name="data_aula" value="<%= Date.today.strftime('%Y-%m-%d') %>" required>
 
-    <label for="modalidade_aula">Modalidade:</label>
+    <label for="modalidade_aula">🥋 Modalidade:</label>
     <select name="modalidade" id="modalidade_aula" onchange="atualizarTurmasAula()">
       <% @modalidades.each do |mod| %>
         <option value="<%= mod %>"><%= mod %></option>
       <% end %>
     </select>
 
-    <label for="descricao">Descrição (opcional):</label>
+    <label for="descricao">📝 Descrição (opcional):</label>
     <input type="text" name="descricao" placeholder="Ex: Treino de Passagem de Guarda">
 
     <div id="turma-container">
-      <label for="turma">Para qual turma?</label>
+      <label for="turma">👥 Para qual turma?</label>
       <select name="turma" id="turma">
         <option value="">— Escolha uma turma —</option>
         <% @turmas.each do |t| %>
@@ -37,7 +39,7 @@
       </label>
     </div>
 
-    <button type="submit">Criar Aula e Abrir Lista de Presença</button>
+    <button type="submit" class="btn-primary">✓ Criar Aula e Abrir Lista de Presença</button>
   </form>
 
   <script>
