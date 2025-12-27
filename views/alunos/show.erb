@@ -84,9 +84,16 @@
     <form action="/graduacoes" method="POST">
       <%= csrf_tag %>
       <input type="hidden" name="aluno_id" value="<%= @aluno['id'] %>">
+      <input type="hidden" name="modalidade" id="graduacao_modalidade" value="<%= @aluno['modalidade'] || 'Jiu Jitsu' %>">
 
       <label for="faixa">🥋 Nova Faixa/Grau:</label>
-      <input type="text" name="faixa" placeholder="Ex: Faixa Azul" required>
+      <select name="faixa" id="faixa_select" required>
+        <option value="">— Selecione a faixa —</option>
+        <% faixas_aluno = (@aluno['modalidade'] == 'Muay Thai') ? @faixas_muay_thai : @faixas %>
+        <% faixas_aluno.each do |faixa| %>
+          <option value="<%= faixa %>"><%= faixa %></option>
+        <% end %>
+      </select>
 
       <label for="data_graduacao">📅 Data:</label>
       <input type="date" name="data_graduacao" value="<%= Date.today.strftime('%Y-%m-%d') %>" required>

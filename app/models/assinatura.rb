@@ -8,7 +8,8 @@ class Assinatura
     end
   end
 
-  def self.criar(aluno_id, valor_mensalidade = 70.00)
+  def self.criar(aluno_id, valor_mensalidade = nil)
+    valor_mensalidade ||= (ENV['DEFAULT_MENSALIDADE'] || 70.00).to_f
     with_db do |client|
       client.exec_params(
         "INSERT INTO assinaturas(aluno_id, plano_id, valor_mensalidade, status)

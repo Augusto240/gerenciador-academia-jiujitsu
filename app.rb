@@ -417,7 +417,7 @@ post '/alunos' do
     aluno = Aluno.criar(params)
     
     # Criar assinatura se o aluno não for bolsista
-    valor_mensalidade = params['bolsista'] == 'on' ? 0.00 : 70.00
+    valor_mensalidade = params['bolsista'] == 'on' ? 0.00 : (ENV['DEFAULT_MENSALIDADE'] || 70.00).to_f
     Assinatura.criar(aluno['id'], valor_mensalidade)
 
     log_action("Criou aluno", { id: aluno['id'], nome: params['nome'] })
@@ -503,6 +503,44 @@ delete '/alunos/:id' do
     session[:mensagem_erro] = "Erro ao excluir aluno. Tente novamente."
     redirect "/alunos/#{params['id']}"
   end
+end
+
+# Rota para listar alunos excluídos (apenas admin)
+get '/alunos-excluidos' do
+  unless admin?
+    session[:mensagem_erro] = "Acesso negado. Apenas administradores."
+    redirect '/'
+    return
+  end
+  
+  @alunos_excluidos = Aluno.buscar_excluidos
+  erb :'alunos/excluidos'
+end
+
+# Rota para restaurar aluno excluído
+post '/alunos/:id/restaurar' do
+  unless admin?
+    halt 403, "Acesso negado"
+  end
+  
+  unless valid_id?(params['id'])
+    halt 400, 'ID inválido'
+  end
+  
+  begin
+    result = Aluno.restaurar(params['id'])
+    if result
+      log_action("Restaurou aluno", { id: params['id'] })
+      session[:mensagem_sucesso] = "Aluno restaurado com sucesso!"
+    else
+      session[:mensagem_erro] = "Aluno não encontrado."
+    end
+  rescue => e
+    logger.error("Erro ao restaurar aluno: #{e.message}")
+    session[:mensagem_erro] = "Erro ao restaurar aluno."
+  end
+  
+  redirect '/alunos-excluidos'
 end
 
 get '/alunos/:id' do

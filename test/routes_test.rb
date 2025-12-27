@@ -21,7 +21,8 @@ class AppRoutesTest < Minitest::Test
   def test_pagina_login_carrega
     get '/login'
     assert last_response.ok?
-    assert_includes last_response.body, 'Acesso ao Sistema'
+    # Verificar elementos do novo design
+    assert_includes last_response.body, 'JPM Team'
   end
 
   def test_pagina_login_tem_formulario
@@ -32,9 +33,24 @@ class AppRoutesTest < Minitest::Test
   end
 
   def test_login_com_credenciais_invalidas
-    post '/login', { email: 'invalido@email.com', password: 'senhaerrada' }
+    # Primeiro, obter o token CSRF da página de login
+    get '/login'
+    csrf_token = last_response.body.match(/name="_csrf" value="([^"]+)"/)[1]
+    
+    post '/login', { email: 'invalido@email.com', password: 'senhaerrada', _csrf: csrf_token }
     assert_equal 302, last_response.status
     follow_redirect!
     assert_includes last_response.body, 'login' # Redireciona para login
+  end
+  
+  def test_health_endpoint
+    get '/health'
+    assert last_response.ok?
+    assert_includes last_response.content_type, 'application/json'
+    
+    body = JSON.parse(last_response.body)
+    assert_includes ['healthy', 'unhealthy'], body['status']
+    assert body['timestamp']
+    assert body['database']
   end
 end

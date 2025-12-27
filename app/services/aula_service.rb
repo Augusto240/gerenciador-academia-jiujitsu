@@ -34,11 +34,17 @@ module AulaService
           client.exec_params("SELECT id FROM alunos WHERE modalidade = $1", ['Jiu Jitsu'])
         end
 
-        # Inicializar presenças em massa
-        alunos_q.each do |a|
+        # Inicializar presenças em massa com batch insert (otimizado)
+        alunos_ids = alunos_q.map { |a| a['id'] }
+        
+        if alunos_ids.any?
+          # Construir batch insert para melhor performance
+          values = alunos_ids.map.with_index { |id, i| "($1, $#{i + 2}, FALSE)" }.join(", ")
+          params_list = [aula_id] + alunos_ids
+          
           client.exec_params(
-            "INSERT INTO presencas (aula_id, aluno_id, presente) VALUES ($1, $2, FALSE) ON CONFLICT (aluno_id, aula_id) DO NOTHING",
-            [aula_id, a['id']]
+            "INSERT INTO presencas (aula_id, aluno_id, presente) VALUES #{values} ON CONFLICT (aluno_id, aula_id) DO NOTHING",
+            params_list
           )
         end
         
@@ -66,11 +72,15 @@ module AulaService
         # Contar quantos alunos serão marcados como presentes
         count = presentes.length
         
-        # Marcar os presentes
-        presentes.each do |aluno_id|
+        # Marcar os presentes em batch (otimizado)
+        if presentes.any?
+          # Converter para inteiros e construir lista para IN clause
+          alunos_ids = presentes.map(&:to_i)
+          placeholders = alunos_ids.map.with_index { |_, i| "$#{i + 2}" }.join(", ")
+          
           client.exec_params(
-            "UPDATE presencas SET presente = TRUE WHERE aula_id = $1 AND aluno_id = $2",
-            [aula_id, aluno_id]
+            "UPDATE presencas SET presente = TRUE WHERE aula_id = $1 AND aluno_id IN (#{placeholders})",
+            [aula_id] + alunos_ids
           )
         end
         

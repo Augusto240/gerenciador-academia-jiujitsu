@@ -1,0 +1,55 @@
+<header>
+  <img src="/logo.png" alt="Logo JPM Team" class="logo">
+  <h1>🗑️ Alunos Excluídos</h1>
+  <p class="subtitle">Visualize e restaure alunos removidos do sistema</p>
+</header>
+
+<section class="card">
+  <div class="header-actions">
+    <a href="/" class="btn-secondary">← Voltar para Lista de Alunos</a>
+  </div>
+  
+  <% if @alunos_excluidos.any? %>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>👤 Nome</th>
+            <th>🥋 Modalidade</th>
+            <th>🎽 Turma</th>
+            <th>📅 Excluído em</th>
+            <th>⚙️ Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @alunos_excluidos.each do |aluno| %>
+            <tr>
+              <td><strong><%= h aluno['nome'] %></strong></td>
+              <td><%= h(aluno['modalidade'] || 'Jiu Jitsu') %></td>
+              <td><%= h(aluno['turma'] || '—') %></td>
+              <td>
+                <% if aluno['deleted_at'] %>
+                  <%= Date.parse(aluno['deleted_at'].to_s).strftime('%d/%m/%Y') %>
+                <% else %>
+                  —
+                <% end %>
+              </td>
+              <td>
+                <form action="/alunos/<%= aluno['id'] %>/restaurar" method="POST" style="display:inline;">
+                  <%= csrf_tag %>
+                  <button type="submit" class="btn-primary" onclick="return confirm('Restaurar este aluno?')">
+                    ♻️ Restaurar
+                  </button>
+                </form>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="empty-state">
+      <p>✅ Nenhum aluno excluído no momento.</p>
+    </div>
+  <% end %>
+</section>
