@@ -1,28 +1,24 @@
+# Dados SQL de exemplo
 data.sql
 
 # Arquivos de ambiente (contém senhas)
 .env
-.env.local
-.env.production
+.env.*
+!.env.example
 
-# Ignora todo o conteúdo da pasta de backups...
-docker/backups/backup_academia.sql
-
+# Backups de banco de dados
+docker/backups/*.sql
 !docker/backups/.gitkeep
-
-docker/backups 
-/docker/backups*
-docker/backups/*.sqldocker/backups/*.sql
-backup_notebook.sql
+backup_*.sql
 
 # Logs
 logs/*.log
+!logs/.gitkeep
 
 # Ruby/Bundler
 .bundle/
 vendor/bundle/
 *.gem
-Gemfile.lock
 
 # IDE
 .idea/
@@ -34,3 +30,7 @@ Gemfile.lock
 # OS
 .DS_Store
 Thumbs.db
+
+# Temporários
+tmp/
+*.tmp

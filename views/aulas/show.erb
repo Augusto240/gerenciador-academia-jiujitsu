@@ -2,9 +2,17 @@
   <img src="/logo.png" alt="Logo JPM Team" class="logo">
   <h1>✅ Lista de Presença</h1>
   <% da = @aula['data_aula'].is_a?(String) ? Date.parse(@aula['data_aula']) : @aula['data_aula'] %>
-  <p class="subtitle">🥋 Aula de: <strong><%= da.strftime('%d/%m/%Y') %></strong></p>
+  <p class="subtitle">🥋 Aula de: <strong><%= da.strftime('%d/%m/%Y') %></strong> - <%= @aula['turma'] %> (<%= @aula['modalidade'] %>)</p>
   <p><%= h @aula['descricao'] %></p>
-  <a href="/aulas" class="btn-secondary">⬅ Voltar para Todas as Aulas</a>
+  <div class="action-buttons">
+    <a href="/aulas" class="btn-secondary" aria-label="Voltar para lista de aulas">⬅ Voltar</a>
+    <a href="/aulas/<%= @aula['id'] %>/editar" class="btn-primary" aria-label="Editar aula">✏️ Editar</a>
+    <form action="/aulas/<%= @aula['id'] %>" method="POST" style="display: inline;" data-confirm="Tem certeza que deseja excluir esta aula? Esta ação não pode ser desfeita.">
+      <%= csrf_tag %>
+      <input type="hidden" name="_method" value="DELETE">
+      <button type="submit" class="btn-danger" aria-label="Excluir aula">🗑️ Excluir</button>
+    </form>
+  </div>
 </header>
 
 <section class="list-section card">

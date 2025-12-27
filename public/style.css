@@ -1384,6 +1384,27 @@ footer a:hover {
   background: #C62828;
 }
 
+/* Botões de ação agrupados */
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 15px;
+}
+
+.action-buttons .btn-primary,
+.action-buttons .btn-secondary,
+.action-buttons .btn-danger {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
 /* ========================================= */
 /* ==   RESPONSIVIDADE MELHORADA          == */
 /* ========================================= */

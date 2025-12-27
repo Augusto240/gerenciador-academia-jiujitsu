@@ -1,0 +1,83 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.2.3'
+        bundler-cache: true
+
+    - name: Install dependencies
+      run: bundle install
+
+    - name: Wait for PostgreSQL
+      run: |
+        until pg_isready -h localhost -p 5432 -U test_user; do
+          echo "Waiting for postgres..."
+          sleep 2
+        done
+
+    - name: Setup database
+      env:
+        DATABASE_HOST: localhost
+        DATABASE_USER: test_user
+        DATABASE_PASSWORD: test_password
+        DATABASE_NAME: test_db
+        RACK_ENV: test
+      run: |
+        PGPASSWORD=test_password psql -h localhost -U test_user -d test_db -f initdb/10_schema.sql
+
+    - name: Run tests
+      env:
+        DATABASE_HOST: localhost
+        DATABASE_USER: test_user
+        DATABASE_PASSWORD: test_password
+        DATABASE_NAME: test_db
+        RACK_ENV: test
+        SESSION_SECRET: test_secret_for_ci_only
+      run: bundle exec ruby test/run_tests.rb
+
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.2.3'
+        bundler-cache: true
+    
+    - name: Install dependencies
+      run: bundle install
+    
+    - name: Check syntax
+      run: ruby -c app.rb

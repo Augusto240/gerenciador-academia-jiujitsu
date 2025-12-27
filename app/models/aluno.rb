@@ -125,8 +125,8 @@ class Aluno
       SQL
 
       params_list = [
-        params['nome'].strip,
-        params['data_nascimento'].empty? ? nil : params['data_nascimento'],
+        params['nome']&.strip,
+        params['data_nascimento'].to_s.empty? ? nil : params['data_nascimento'],
         params['modalidade'] || 'Jiu Jitsu',
         params['cor_faixa'],
         params['turma'],
@@ -163,8 +163,8 @@ class Aluno
       SQL
       
       params_list = [
-        params['nome'].strip,
-        params['data_nascimento'].empty? ? nil : params['data_nascimento'],
+        params['nome']&.strip,
+        params['data_nascimento'].to_s.empty? ? nil : params['data_nascimento'],
         params['modalidade'] || 'Jiu Jitsu',
         params['cor_faixa'],
         params['turma'],

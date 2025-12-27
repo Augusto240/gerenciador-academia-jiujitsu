@@ -1,0 +1,46 @@
+# Arquivos de log
+logs/
+*.log
+
+# Dependências (instaladas no container)
+.bundle/
+vendor/bundle/
+
+# Arquivos de teste
+test/
+
+# Git e controle de versão
+.git/
+.gitignore
+
+# Arquivos de IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos de ambiente (sensíveis)
+.env
+.env.*
+!.env.example
+
+# Backups de banco
+docker/backups/
+*.sql
+
+# Arquivos temporários
+tmp/
+*.tmp
+
+# Dados SQL de exemplo
+data.sql/
+
+# Documentação (não necessária no container)
+README.md
+*.md
+!LICENSE.md
